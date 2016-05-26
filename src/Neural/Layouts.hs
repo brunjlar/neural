@@ -13,6 +13,8 @@ module Neural.Layouts
     , idLayout
     , (:>)(..)
     , Pair(..)
+    , Iter(..)
+    , IterLayout(..)
     ) where
 
 import Control.Natural
@@ -86,3 +88,22 @@ instance ( Layout l
     compute (l :> m) (Pair ws ws') = compute m ws' . compute l ws
 
     initR (l :> m) = Pair <$> initR l <*> initR m
+
+newtype Iter f g a = Iter (f (g a)) deriving (Functor, Foldable, Traversable)
+
+iterMap :: Functor f => (g a -> h a) -> Iter f g a -> Iter f h a
+iterMap k (Iter xs) = Iter $ k <$> xs
+
+newtype IterLayout (f :: * -> *) l = IterLayout l
+
+instance (Functor f, Layout l) => Layout (IterLayout f l) where
+
+    type Source (IterLayout f l) = Iter f (Source l)
+
+    type Target (IterLayout f l) = Iter f (Target l)
+
+    type Weights (IterLayout f l) = Weights l
+
+    compute (IterLayout l) = iterMap . compute l
+
+    initR (IterLayout l) = initR l

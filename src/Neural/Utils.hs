@@ -3,4 +3,5 @@ module Neural.Utils
     ) where
 
 import Neural.Utils.Stack       as X
+import Neural.Utils.Statistics  as X
 import Neural.Utils.Traversable as X

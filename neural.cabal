@@ -19,8 +19,10 @@ library
                      , Neural.Components
                      , Neural.Descent
                      , Neural.Layouts
+                     , Neural.Samples
                      , Neural.Utils
                      , Neural.Utils.Stack
+                     , Neural.Utils.Statistics
                      , Neural.Utils.Traversable
   ghc-options:         -Wall -threaded -rtsopts -O2 -with-rtsopts=-N -fexcess-precision -optc-O3 -optc-ffast-math
   build-depends:       base >= 4.7 && < 5
