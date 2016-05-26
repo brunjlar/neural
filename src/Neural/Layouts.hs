@@ -1,4 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
@@ -6,18 +5,18 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
-module Neural.Gradients
-    ( 
+module Neural.Layouts
+    ( Layout(..)
+    , NatLayout(..)
+    , None(..)
+    , idLayout
+    , (:>)(..)
+    , Pair(..)
     ) where
 
-import Control.Category
 import Control.Natural
 import MyPrelude
-import Numeric.AD
-import Prelude                     hiding (id, (.))
-import Neural.Utils.Traversable
 
 class ( Traversable (Weights l)
       , Applicative (Weights l)) => Layout l where
@@ -31,28 +30,6 @@ class ( Traversable (Weights l)
     compute :: RealFloat a => l -> Weights l a -> Source l a -> Target l a
 
     initR :: MonadRandom m => l -> m (Weights l Double)
-
-data Component :: (* -> *) -> (* -> *) -> * where
-
-    Component :: Layout l => l -> Weights l Double -> Component (Source l) (Target l)
-
-_weights :: Lens' (Component f g) [Double]
-_weights = lens (\(Component _ ws) -> toList ws)
-                (\(Component l _) ws -> let Just ws' = fromList ws in Component l ws')
-
-activate :: Component f g -> f Double -> g Double
-activate (Component l ws) xs = compute l ws xs
-
-componentR :: (Layout l, MonadRandom m) => l -> m (Component (Source l) (Target l))
-componentR l = Component l <$> initR l
-
-descent :: Functor f => Component f Identity -> Double -> f Double -> Component f Identity
-descent (Component l ws) eta xs = Component l ws' where
-
-    ws' = gradWith
-            (\x dx -> x - eta * dx)
-            (\ws'' -> runIdentity $ compute l ws'' $ auto <$> xs)
-            ws
 
 data NatLayout :: (* -> *) -> (* -> *) -> * where
 
@@ -109,9 +86,3 @@ instance ( Layout l
     compute (l :> m) (Pair ws ws') = compute m ws' . compute l ws
 
     initR (l :> m) = Pair <$> initR l <*> initR m
-
-instance Category Component where
-
-    id = Component idLayout None
-
-    (Component m ws') . (Component l ws) = Component (l :> m) (Pair ws ws')
