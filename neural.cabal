@@ -1,0 +1,52 @@
+name:                neural
+version:             0.1.0.0
+synopsis:            Neural Networks in native Haskell
+description:         Please see README.md
+homepage:            http://github.com/brunjlar/neural
+license:             MIT
+license-file:        LICENSE
+author:              Lars Bruenjes
+maintainer:          brunjlar@gmail.com
+copyright:           Copyright: (c) 2016 Dr. Lars Bruenjes
+category:            Machine Learning
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Neural
+  other-modules:       MyPrelude
+                     , Neural.Gradients
+                     , Neural.Utils
+                     , Neural.Utils.Stack
+                     , Neural.Utils.Traversable
+  ghc-options:         -Wall -threaded -rtsopts -O2 -with-rtsopts=-N -fexcess-precision -optc-O3 -optc-ffast-math
+  build-depends:       base >= 4.7 && < 5
+                     , ad
+                     , deepseq
+                     , directory
+                     , filepath
+                     , lens
+                     , MonadRandom
+                     , mtl
+                     , natural-transformation
+                     , parallel
+                     , text
+                     , transformers
+  default-language:    Haskell2010
+
+test-suite neural-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base >= 4.7 && < 5
+                     , hspec
+                     , neural
+  other-modules:       Neural.DescentSpec
+  ghc-options:         -Wall -threaded
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/brunjlar/neural.git
+
