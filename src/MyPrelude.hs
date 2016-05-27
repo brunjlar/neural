@@ -11,7 +11,7 @@ module MyPrelude
     , lefts, rights
     , toList
     , on
-    , sort, sortBy, minimumBy, maximumBy, foldl'
+    , sort, sortBy, minimumBy, maximumBy, foldl', intercalate
     , catMaybes
     , (<>)
     , getDirectoryContents
@@ -33,7 +33,7 @@ import Control.Monad.Trans.Writer (Writer, WriterT, tell, runWriter, execWriter,
 import Data.Either                (lefts, rights)
 import Data.Foldable              (toList)
 import Data.Function              (on)
-import Data.List                  (sort, sortBy, minimumBy, maximumBy, foldl')
+import Data.List                  (sort, sortBy, minimumBy, maximumBy, foldl', intercalate)
 import Data.Maybe                 (catMaybes)
 import Data.Monoid                ((<>))
 import System.Directory           (getDirectoryContents)

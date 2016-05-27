@@ -2,7 +2,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Neural.Components
+module Neural.Component
     ( Component(..)
     , _weights
     , componentR
@@ -14,8 +14,8 @@ import Control.Category
 import Data.Proxy
 import MyPrelude
 import Prelude                     hiding (id, (.))
-import Neural.Layouts
-import Neural.Samples
+import Neural.Layout
+import Neural.Sample
 import Neural.Utils.Traversable
 
 data Component :: (* -> *) -> (* -> *) -> * where

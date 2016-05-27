@@ -10,9 +10,9 @@ module Neural.Descent
 
 import MyPrelude
 import Numeric.AD
-import Neural.Components
-import Neural.Layouts
-import Neural.Samples
+import Neural.Component
+import Neural.Layout
+import Neural.Sample
 
 descent :: ( Sample a
            , Source (Model a) ~ f

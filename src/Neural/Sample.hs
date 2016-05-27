@@ -2,13 +2,13 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Neural.Samples
+module Neural.Sample
     ( Sample(..)
     , Batch(..)
     ) where
 
 import Data.Proxy
-import Neural.Layouts
+import Neural.Layout
 import Neural.Utils.Statistics (mean)
 
 class ( Layout (Model a)

@@ -16,20 +16,24 @@ library
   hs-source-dirs:      src
   exposed-modules:     Neural
   other-modules:       MyPrelude
-                     , Neural.Components
+                     , Neural.Component
                      , Neural.Descent
-                     , Neural.Layouts
-                     , Neural.Samples
+                     , Neural.Layer
+                     , Neural.Layout
+                     , Neural.Sample
                      , Neural.Utils
                      , Neural.Utils.Stack
                      , Neural.Utils.Statistics
                      , Neural.Utils.Traversable
+                     , Neural.Vector
+                     , Neural.Matrix
   ghc-options:         -Wall -threaded -rtsopts -O2 -with-rtsopts=-N -fexcess-precision -optc-O3 -optc-ffast-math
   build-depends:       base >= 4.7 && < 5
                      , ad
                      , deepseq
                      , directory
                      , filepath
+                     , ghc-typelits-natnormalise
                      , lens
                      , MonadRandom
                      , mtl

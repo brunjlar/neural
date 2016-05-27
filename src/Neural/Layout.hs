@@ -5,8 +5,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE RankNTypes #-}
 
-module Neural.Layouts
+module Neural.Layout
     ( Layout(..)
     , NatLayout(..)
     , None(..)
@@ -15,6 +16,7 @@ module Neural.Layouts
     , Pair(..)
     , Iter(..)
     , IterLayout(..)
+    , FunLayout(..)
     ) where
 
 import Control.Natural
@@ -107,3 +109,17 @@ instance (Functor f, Layout l) => Layout (IterLayout f l) where
     compute (IterLayout l) = iterMap . compute l
 
     initR (IterLayout l) = initR l
+
+data FunLayout (f :: * -> *) = FunLayout (forall a. RealFloat a => a -> a)
+
+instance Functor f => Layout (FunLayout f) where
+
+    type Source (FunLayout f) = f
+
+    type Target (FunLayout f) = f
+
+    type Weights (FunLayout f) = None
+
+    initR = const (return None)
+
+    compute (FunLayout a) None xs = a <$> xs
