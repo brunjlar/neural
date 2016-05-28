@@ -55,7 +55,7 @@ instance Layout (Analytic f g) where
 
     type (Weights (Analytic f g)) = Empty
 
-    compute (Analytic a) Empty x = a x
+    compute (Analytic a) Empty = a
 
     initR = const (return Empty)
 

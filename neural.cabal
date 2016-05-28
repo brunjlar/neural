@@ -22,6 +22,7 @@ library
                      , Neural.Layer
                      , Neural.Layout
                      , Neural.Model
+                     , Neural.Monad
                      , Neural.Utils
                      , Neural.Utils.List
                      , Neural.Utils.Random

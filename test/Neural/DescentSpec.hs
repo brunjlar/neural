@@ -18,7 +18,7 @@ addSpec = describe "batchDescent" $
     it "should approximate the square roots in [0, 4]" $
         go >>= (`shouldSatisfy` (< 0.015))
 
-l :: LAYOUT (Vector 1) (Vector 1)
+l :: Layer 1 1
 l = let l1 = layer tanh  :: LAYOUT (Vector 1) (Vector 2)
         l2 = linearLayer :: LAYOUT (Vector 2) (Vector 1)
     in  l2 . l1
@@ -30,26 +30,22 @@ eta :: Double
 eta = 0.1
 
 go :: IO Double
-go = flip evalRandT (mkStdGen 691245) $ do
+go = evalInitModelM l stdModel (mkStdGen 691245) $ do 
 
-    c <- componentR l
-    liftIO $ putStrLn $ "initialized net, weights are " ++ show (c ^. _weights)
+    e0 <- err
+    liftIO $ putStrLn $ "initial error is " ++ show e0
     nl
 
-    let m      = stdModel c
-    liftIO $ putStrLn $ "initial error is " ++ show (err m)
-    nl
-
-    (i, e, m') <- loop (1 :: Int) m
+    (i, e) <- loop (1 :: Int)
     nl
     liftIO $ printf "%d steps, error: %f\n" i e
     nl
 
-    forM_ [0 :: Double, 0.1 .. 4] $ \x -> liftIO $ do
-       let y  = sqrt x
-           y' = act m' x
-           e' = abs (y - y')
-       printf "%3.1f %10.8f %10.8f %10.8f\n" x y y' e'
+    forM_ [0 :: Double, 0.1 .. 4] $ \x -> do
+        y' <- act x
+        let y  = sqrt x
+            e' = abs (y - y')
+        liftIO $ printf "%3.1f %10.8f %10.8f %10.8f\n" x y y' e'
     
     return e
 
@@ -57,20 +53,22 @@ go = flip evalRandT (mkStdGen 691245) $ do
 
     nl = liftIO $ putStrLn ""
 
-    act m x = head $ toList $ activateModel m (cons x nil, cons (sqrt x) nil)
+    act x = do
+        ys <- activateM (cons x nil, cons (sqrt x) nil)
+        return $ head $ toList ys
 
-    err' m x = abs (sqrt x - act m x)
+    err' x = act x >>= \y -> return $ abs (sqrt x - y)
 
-    err m = mean [err' m x | x <- [0, 0.1 .. 4]] 
+    err = mean <$> mapM err' [0, 0.1 .. 4]
 
-    step i m = do
+    step i = do
         xs <- takeR 20 samples
-        let (e, m') = batchDescent m eta xs
-            e'      = err m
+        e  <- batchDescentM eta xs
+        e' <- err
         when (i `mod` 100 == 0) $ liftIO $ printf "%6d %10.8f %10.8f\n" i e e'
-        return (e', m')
+        return e'
 
-    loop i m = do
-        (e', m') <- step i m
-        if (e' < 0.015 || i == 10000) then return (i, e', m')
-                                      else loop (succ i) m'
+    loop i = do
+        e' <- step i
+        if (e' < 0.015 || i == 10000) then return (i, e')
+                                      else loop (succ i)

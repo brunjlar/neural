@@ -4,7 +4,7 @@ module MyPrelude
     , when, unless, forM, forM_, void, replicateM
     , Identity(..)
     , MonadIO(..)
-    , MonadRandom, getRandom, getRandomR
+    , MonadRandom, getRandom, getRandomR, RandT, runRandT, evalRandT, StdGen, mkStdGen
     , MonadState(..)
     , lift
     , State, StateT, modify, runState, evalState, execState, runStateT, evalStateT, execStateT
@@ -27,7 +27,7 @@ import Control.Lens               ((&), (^.), (.~), Lens', Getter, to, lens)
 import Control.Monad              (when, unless, forM, forM_, void, replicateM)
 import Control.Monad.Identity     (Identity(..))
 import Control.Monad.IO.Class     (MonadIO(..))
-import Control.Monad.Random       (MonadRandom, getRandom, getRandomR)
+import Control.Monad.Random       (MonadRandom, getRandom, getRandomR, RandT, runRandT, evalRandT, StdGen, mkStdGen)
 import Control.Monad.State.Class  (MonadState(..))
 import Control.Monad.Trans.Class  (lift)
 import Control.Monad.Trans.State  (State, StateT, modify, runState, evalState, execState, runStateT, evalStateT, execStateT)
