@@ -6,22 +6,24 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Neural.Layer where
 
 import Control.Category
+import Data.Proxy
 import GHC.TypeLits
+import GHC.TypeLits.Witnesses
 import MyPrelude
 import Neural.Analytic
 import Neural.Layout
 import Neural.Matrix
 import Neural.Vector
-import Prelude          hiding (id, (.))
+import Prelude                 hiding (id, (.))
 
 data LinearLayer (i :: Nat) (o :: Nat) = LinearLayer
 
-instance ( Applicative (Vector (i + 1))
-         , Applicative (Matrix o (i + 1))) => Layout (LinearLayer i o) where
+instance (KnownNat i, KnownNat (i + 1), KnownNat o) => Layout (LinearLayer i o) where
 
     type Source (LinearLayer i o) = Vector i
 
@@ -31,14 +33,10 @@ instance ( Applicative (Vector (i + 1))
 
     initR LinearLayer = sequenceA $ pure $ getRandomR (-0.001, 0.001)
 
-    compute LinearLayer m v = m <%%> (1 :% v)
+    compute LinearLayer m v = m <%%> (cons 1 v)
 
-linearLayer :: ( Applicative (Vector (i + 1))
-               , Applicative (Matrix o (i + 1))) => LAYOUT (Vector i) (Vector o)
-linearLayer = LAYOUT LinearLayer
+linearLayer :: forall i o. (KnownNat i, KnownNat o) => LAYOUT (Vector i) (Vector o)
+linearLayer = withNatOp (%+) (Proxy :: Proxy i) (Proxy :: Proxy 1) $ LAYOUT LinearLayer
 
-layer :: ( Applicative (Vector (i + 1))
-         , Applicative (Matrix o (i + 1))) 
-         => (forall a. RealFloat a => a -> a) 
-         -> LAYOUT (Vector i) (Vector o)
+layer :: (KnownNat i, KnownNat o) => (forall a. RealFloat a => a -> a) -> LAYOUT (Vector i) (Vector o)
 layer f = analytic (fmapAnalytic f) . linearLayer where

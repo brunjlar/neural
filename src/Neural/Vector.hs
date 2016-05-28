@@ -1,55 +1,63 @@
-{-# OPTIONS_GHC -fplugin GHC.TypeLits.Normalise #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE IncoherentInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Neural.Vector
-    ( Vector(..)
+    ( Vector
     , (<%>)
+    , nil
+    , cons
     ) where
 
-import GHC.TypeLits
-import MyPrelude
-
-infixr 5 :%
+import           Data.Proxy
+import qualified Data.Vector            as V
+import           GHC.TypeLits
+import           GHC.TypeLits.Witnesses
+import           MyPrelude
 
 data Vector :: Nat -> * -> * where
-    Nil  :: Vector 0 a
-    (:%) :: a -> Vector (n - 1) a -> Vector n a
 
-deriving instance Eq a => Eq (Vector n a)
+    Vector :: KnownNat n => V.Vector a -> Vector n a
 
-deriving instance Functor (Vector n)
+instance Eq a => Eq (Vector n a) where
 
-deriving instance Foldable (Vector n)
-
-deriving instance Traversable (Vector n)
+    Vector xs == Vector ys = xs == ys
 
 instance Show a => Show (Vector n a) where
 
-    show v = "<" ++ intercalate ", " (map show $ toList v) ++ ">"
+    showsPrec p (Vector xs) = showsPrec p xs
 
-instance Applicative (Vector 0) where
+instance Functor (Vector n) where
 
-    pure = const Nil
+    fmap f (Vector v) = Vector (f <$> v)
 
-    _ <*> _ = Nil
+instance forall n. KnownNat n => Applicative (Vector n) where
 
-instance (Applicative (Vector (n - 1))) => Applicative (Vector n) where
+    pure x = let n = natVal (Proxy :: Proxy n) in Vector (V.replicate (fromIntegral n) x)
 
-    pure x = x :% pure x
+    Vector fs <*> Vector xs = Vector (fs <*> xs)
 
-    (f :% fs) <*> (x :% xs) = f x :% (fs <*> xs)
-    _         <*> _         = error "impossible branch"
+instance Foldable (Vector n) where
 
-(<%>) :: (Applicative f, Foldable f, Num a) => f a -> f a -> a
-v <%> w = sum $ (*) <$> v <*> w
+    foldMap f (Vector xs) = foldMap f xs
+
+instance Traversable (Vector n) where
+
+    sequenceA (Vector xs) = Vector <$> sequenceA xs
+
+instance (KnownNat n, Read a) => Read (Vector n a) where
+
+    readsPrec p s = let xs  = readsPrec p s :: [(V.Vector a, String)]
+                        n'  = fromIntegral (natVal (Proxy :: Proxy n))
+                    in  [(Vector ys, t) | (ys, t) <- xs, length ys == n']    
+
+(<%>) :: (Num a, Foldable f) => f a -> f a -> a
+xs <%> ys = sum $ zipWith (*) (toList xs) (toList ys)
+
+nil :: Vector 0 a
+nil = Vector V.empty
+
+cons :: forall a n. a -> Vector n a -> Vector (n + 1) a
+cons x (Vector xs) = withNatOp (%+) (Proxy :: Proxy n) (Proxy :: Proxy 1) $ Vector $ V.cons x xs

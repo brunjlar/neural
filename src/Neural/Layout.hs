@@ -23,8 +23,7 @@ import MyPrelude
 import Neural.Analytic
 import Prelude          hiding (id, (.))
 
-class ( Traversable (Weights l)
-      , Applicative (Weights l)) => Layout l where
+class (Traversable (Weights l), Applicative (Weights l)) => Layout l where
 
     type Source l :: * -> *
 

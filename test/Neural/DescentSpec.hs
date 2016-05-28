@@ -24,7 +24,7 @@ l = let l1 = layer tanh  :: LAYOUT (Vector 1) (Vector 2)
     in  l2 . l1
 
 samples :: [(Vector 1 Double, Vector 1 Double)]
-samples = [(x * x :% Nil, x :% Nil) | x <- [0, 0.001 .. 2]]
+samples = [(cons (x * x) nil, cons x nil) | x <- [0, 0.001 .. 2]]
 
 eta :: Double
 eta = 0.1
@@ -57,7 +57,7 @@ go = flip evalRandT (mkStdGen 691245) $ do
 
     nl = liftIO $ putStrLn ""
 
-    act m x = head $ toList $ activateModel m (x :% Nil, sqrt x :% Nil)
+    act m x = head $ toList $ activateModel m (cons x nil, cons (sqrt x) nil)
 
     err' m x = abs (sqrt x - act m x)
 

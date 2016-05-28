@@ -47,6 +47,8 @@ library
                      , STMonadTrans
                      , text
                      , transformers
+                     , typelits-witnesses
+                     , vector
   default-language:    Haskell2010
 
 test-suite neural-test
