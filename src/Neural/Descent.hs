@@ -6,52 +6,43 @@ module Neural.Descent
     , batchDescent
     , descentM
     , batchDescentM
+    , getModelError
     ) where
 
 import MyPrelude
 import Numeric.AD
 import Neural.Component
 import Neural.Layout
-import Neural.Sample
+import Neural.Model
 
-descent :: ( Sample a
-           , Source (Model a) ~ f
-           , Target (Model a) ~ g
-           ) => Component f g -> Double -> a -> (Double, Component f g)
-descent (Component l ws) eta s = (err, Component l ws') where
+descent :: Functor f => Model f g a b -> Double -> a -> (Double, Model f g a b)
+descent m eta s = case component m of
+    Component l ws -> (err, m { component = Component l ws' }) where
 
-    (err, ws') = gradWith'
-                     (\x dx -> x - eta * dx)
-                     (\ws'' -> modelError s $ compute l ws'' $ auto <$> toSource s)
-                     ws
+        (err, ws') = gradWith'
+                         (\x dx -> x - eta * dx)
+                         (\ws'' -> modelError m auto s $ compute l ws'' $ auto <$> toInput m s)
+                         ws
 
-batchDescent :: ( Sample a
-                , Source (Model a) ~ f
-                , Target (Model a) ~ g
-                ) => Component f g -> Double -> [a] -> (Double, Component f g)
-batchDescent c eta xs = let ic         = iterComponent c
-                            (err, ic') = descent ic eta (Batch xs)
-                            c'         = c & _weights .~ (ic' ^. _weights)
-                        in  (err, c')
+batchDescent :: Functor f => Model f g a b -> Double -> [a] -> (Double, Model f g a b)
+batchDescent m eta xs = let im         = batch m
+                            (err, im') = descent im eta xs
+                            m'         = m & _component . _weights .~ (im' ^. _component . _weights)
+                        in  (err, m')
 
-descentM :: ( Sample a
-            , Source (Model a) ~ f
-            , Target (Model a) ~ g
-            , MonadState (Component f g) m
-            ) => Double -> a -> m Double
+descentM :: (Functor f, MonadState (Model f g a b) m) => Double -> a -> m Double
 descentM eta s = do
-    c <- get
-    let (err, c') = descent c eta s
-    put c'
+    m <- get
+    let (err, m') = descent m eta s
+    put m'
     return err
 
-batchDescentM :: ( Sample a
-                 , Source (Model a) ~ f
-                 , Target (Model a) ~ g
-                 , MonadState (Component f g) m
-                 ) => Double -> [a] -> m Double
+batchDescentM :: (Functor f, MonadState (Model f g a b) m) => Double -> [a] -> m Double
 batchDescentM eta xs = do
-    c <- get
-    let (err, c') = batchDescent c eta xs
-    put c'
+    m <- get
+    let (err, m') = batchDescent m eta xs
+    put m'
     return err
+
+getModelError :: Functor f => Model f g a b -> a -> Double
+getModelError m s = let (err, _) = descent m 1 s in err

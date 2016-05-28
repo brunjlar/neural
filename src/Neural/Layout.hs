@@ -9,18 +9,19 @@
 
 module Neural.Layout
     ( Layout(..)
-    , NatLayout(..)
-    , None(..)
-    , idLayout
-    , (:>)(..)
+    , LAYOUT(..)
+    , Empty(..)
+    , analytic
     , Pair(..)
+    , PairLayout(..)
     , Iter(..)
     , IterLayout(..)
-    , FunLayout(..)
     ) where
 
-import Control.Natural
+import Control.Category
 import MyPrelude
+import Neural.Analytic
+import Prelude          hiding (id, (.))
 
 class ( Traversable (Weights l)
       , Applicative (Weights l)) => Layout l where
@@ -35,32 +36,32 @@ class ( Traversable (Weights l)
 
     initR :: MonadRandom m => l -> m (Weights l Double)
 
-data NatLayout :: (* -> *) -> (* -> *) -> * where
+data LAYOUT :: (* -> *) -> (* -> *) -> * where
 
-    NatLayout :: (f :~> g) -> NatLayout f g
+    LAYOUT :: Layout l => l -> LAYOUT (Source l) (Target l)
 
-data None a = None deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
+data Empty a = Empty deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
 
-instance Applicative None where
+instance Applicative Empty where
 
-    pure = const None
+    pure = const Empty
 
-    None <*> None = None
+    Empty <*> Empty = Empty
 
-instance Layout (NatLayout f g) where
+instance Layout (Analytic f g) where
 
-    type (Source (NatLayout f g)) = f
+    type (Source (Analytic f g)) = f
 
-    type (Target (NatLayout f g)) = g
+    type (Target (Analytic f g)) = g
 
-    type (Weights (NatLayout f g)) = None
+    type (Weights (Analytic f g)) = Empty
 
-    compute (NatLayout a) None x = a $$ x
+    compute (Analytic a) Empty x = a x
 
-    initR = const (return None)
+    initR = const (return Empty)
 
-idLayout :: NatLayout f f
-idLayout = NatLayout (Nat id)
+analytic :: Analytic f g -> LAYOUT f g
+analytic = LAYOUT
 
 data Pair s t a = Pair (s a) (t a) deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
 
@@ -70,26 +71,30 @@ instance (Applicative s, Applicative t) => Applicative (Pair s t) where
 
     Pair f g <*> Pair x y = Pair (f <*> x) (g <*> y)
 
-infixr 1 :>
+data PairLayout :: * -> * -> * where
 
-data (:>) :: * -> * -> * where
-
-    (:>) :: (Layout l, Layout m, Target l ~ Source m) => l -> m -> (l :> m)
+    PairLayout :: (Layout l, Layout m, Source l ~ Target m) => l -> m -> PairLayout l m
 
 instance ( Layout l
          , Layout m
-         , Target l ~ Source m
-         ) => Layout (l :> m) where
+         , Source l ~ Target m
+         ) => Layout (PairLayout l m) where
 
-    type Source (l :> m) = Source l 
+    type Source (PairLayout l m) = Source m 
 
-    type Target (l :> m) = Target m
+    type Target (PairLayout l m) = Target l
 
-    type Weights (l :> m) = Pair (Weights l) (Weights m)
+    type Weights (PairLayout l m) = Pair (Weights l) (Weights m)
 
-    compute (l :> m) (Pair ws ws') = compute m ws' . compute l ws
+    compute (PairLayout l m) (Pair ws ws') = compute l ws . compute m ws'
 
-    initR (l :> m) = Pair <$> initR l <*> initR m
+    initR (PairLayout l m) = Pair <$> initR l <*> initR m
+
+instance Category LAYOUT where
+
+    id = analytic id
+
+    LAYOUT l . LAYOUT m = LAYOUT (PairLayout l m)
 
 newtype Iter f g a = Iter (f (g a)) deriving (Functor, Foldable, Traversable)
 
@@ -109,17 +114,3 @@ instance (Functor f, Layout l) => Layout (IterLayout f l) where
     compute (IterLayout l) = iterMap . compute l
 
     initR (IterLayout l) = initR l
-
-data FunLayout (f :: * -> *) = FunLayout (forall a. RealFloat a => a -> a)
-
-instance Functor f => Layout (FunLayout f) where
-
-    type Source (FunLayout f) = f
-
-    type Target (FunLayout f) = f
-
-    type Weights (FunLayout f) = None
-
-    initR = const (return None)
-
-    compute (FunLayout a) None xs = a <$> xs

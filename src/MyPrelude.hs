@@ -3,6 +3,7 @@ module MyPrelude
     , (&), (^.), (.~), Lens', Getter, to, lens
     , when, unless, forM, forM_, void, replicateM
     , Identity(..)
+    , MonadIO(..)
     , MonadRandom, getRandom, getRandomR
     , MonadState(..)
     , lift
@@ -25,6 +26,7 @@ import Control.DeepSeq            (NFData(..))
 import Control.Lens               ((&), (^.), (.~), Lens', Getter, to, lens)
 import Control.Monad              (when, unless, forM, forM_, void, replicateM)
 import Control.Monad.Identity     (Identity(..))
+import Control.Monad.IO.Class     (MonadIO(..))
 import Control.Monad.Random       (MonadRandom, getRandom, getRandomR)
 import Control.Monad.State.Class  (MonadState(..))
 import Control.Monad.Trans.Class  (lift)

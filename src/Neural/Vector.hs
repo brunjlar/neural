@@ -44,12 +44,12 @@ instance Applicative (Vector 0) where
 
     _ <*> _ = Nil
 
-instance Applicative (Vector (n - 1)) => Applicative (Vector n) where
+instance (Applicative (Vector (n - 1))) => Applicative (Vector n) where
 
     pure x = x :% pure x
 
     (f :% fs) <*> (x :% xs) = f x :% (fs <*> xs)
     _         <*> _         = error "impossible branch"
 
-(<%>) :: (Applicative (Vector n), Num a) => Vector n a -> Vector n a -> a
+(<%>) :: (Applicative f, Foldable f, Num a) => f a -> f a -> a
 v <%> w = sum $ (*) <$> v <*> w
