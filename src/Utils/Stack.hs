@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Neural.Utils.Stack
+module Utils.Stack
     ( StackT
     , pop
     , peek

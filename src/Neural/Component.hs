@@ -15,9 +15,9 @@ module Neural.Component
 import Control.Arrow
 import Control.Category
 import MyPrelude
-import Neural.Analytic
-import Neural.Utils.Traversable
-import Prelude                  hiding (id, (.))
+import Prelude           hiding (id, (.))
+import Utils.Analytic
+import Utils.Traversable
 
 newtype Component' t a b = Component' { runC :: a -> t Analytic -> b }
 

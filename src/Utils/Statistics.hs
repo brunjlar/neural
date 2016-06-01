@@ -3,7 +3,7 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveFunctor #-}
 
-module Neural.Utils.Statistics
+module Utils.Statistics
     ( Probability
     , probability
     , fromProbability

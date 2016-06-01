@@ -15,11 +15,11 @@ import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Witnesses
 import MyPrelude
-import Neural.Analytic
 import Neural.Component
-import Neural.Matrix
-import Neural.Vector
 import Prelude                 hiding (id, (.))
+import Utils.Analytic
+import Utils.Matrix
+import Utils.Vector
 
 type Layer i o = Component (Vector i Analytic) (Vector o Analytic)
 

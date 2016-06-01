@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Neural.Matrix
+module Utils.Matrix
     ( Matrix(..) 
     , (<%%>)
     , mindex
@@ -14,7 +14,7 @@ module Neural.Matrix
 
 import Data.Proxy
 import GHC.TypeLits
-import Neural.Vector
+import Utils.Vector
 
 newtype Matrix (m :: Nat) (n :: Nat) a = Matrix (Vector m (Vector n a)) 
     deriving (Eq, Show, Functor, Foldable, Traversable)

@@ -15,20 +15,21 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Neural
-  other-modules:       MyPrelude
-                     , Neural.Analytic
+                     , MyPrelude
                      , Neural.Component
                      , Neural.Descent
                      , Neural.Layer
                      , Neural.Monad
-                     , Neural.Utils
-                     , Neural.Utils.List
-                     , Neural.Utils.Random
-                     , Neural.Utils.Stack
-                     , Neural.Utils.Statistics
-                     , Neural.Utils.Traversable
-                     , Neural.Vector
-                     , Neural.Matrix
+                     , Utils
+                     , Utils.Analytic
+                     , Utils.List
+                     , Utils.Matrix
+                     , Utils.Random
+                     , Utils.Stack
+                     , Utils.Statistics
+                     , Utils.Traversable
+                     , Utils.Vector
+  other-modules:
   ghc-options:         -Wall -threaded -rtsopts -O2 -with-rtsopts=-N -fexcess-precision -optc-O3 -optc-ffast-math
   build-depends:       base >= 4.7 && < 5
                      , ad

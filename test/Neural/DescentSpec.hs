@@ -1,13 +1,14 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE Arrows #-}
 
-
 module Neural.DescentSpec (spec) where
 
 import Control.Arrow         hiding (loop)
 import Control.Monad.Random
+import MyPrelude
 import Neural
 import Test.Hspec
+import Utils
 
 spec :: Spec
 spec = describe "descent" $

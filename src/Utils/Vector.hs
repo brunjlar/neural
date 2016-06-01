@@ -4,7 +4,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Neural.Vector
+module Utils.Vector
     ( Vector
     , (<%>)
     , nil

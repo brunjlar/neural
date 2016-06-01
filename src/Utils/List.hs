@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Neural.Utils.List
+module Utils.List
     ( splitLast
     , pick
     , distribute

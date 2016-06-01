@@ -1,10 +1,10 @@
-module Neural.Utils.Traversable
+module Utils.Traversable
     ( fromList
     , safeHead
     ) where
 
 import MyPrelude
-import Neural.Utils.Stack
+import Utils.Stack
 
 fromList :: (Applicative t, Traversable t) => [a] -> Maybe (t a)
 fromList xs = sequenceA $ evalStack (sequenceA $ pure pop) xs

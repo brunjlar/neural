@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Neural.Analytic
+module Utils.Analytic
     ( Analytic
     , fromDouble
     , fromAnalytic

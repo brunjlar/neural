@@ -7,10 +7,10 @@ module Neural.Descent
     ) where
 
 import MyPrelude
-import Neural.Analytic
 import Neural.Component
 import Neural.Monad
-import Neural.Utils.Statistics (mean)
+import Utils.Analytic
+import Utils.Statistics (mean)
 
 type Err a b c = forall t. Component' t a b -> Component' t c Analytic
 
