@@ -5,10 +5,8 @@
 module Neural.DescentSpec (spec) where
 
 import Control.Arrow         hiding (loop)
-import Control.Category
 import Control.Monad.Random
 import Neural
-import Prelude               hiding (id, (.))
 import Test.Hspec
 
 spec :: Spec
@@ -28,9 +26,6 @@ err c = proc x -> do
     y <- c -< x
     let e = y - fromDouble (sqrt x)
     returnA -< e * e
-
-fromAnalytic :: Analytic -> Double
-fromAnalytic = fromRational . toRational
 
 samples :: [Double]
 samples = [0, 0.001 .. 4]
@@ -64,7 +59,9 @@ go = evalComponentM component (mkStdGen 691245) $ do
 
     nl = liftIO $ putStrLn ""
 
-    act = fmap fromAnalytic . activateM
+    act x = do
+        Just y <- fromAnalytic <$> activateM x
+        return y
 
     getErr' x = act x >>= \y -> return $ abs (sqrt x - y)
 
