@@ -9,6 +9,9 @@ module Neural.Vector
     , (<%>)
     , nil
     , cons
+    , vindex
+    , vhead
+    , vtail
     ) where
 
 import           Data.Proxy
@@ -61,3 +64,12 @@ nil = Vector V.empty
 
 cons :: forall a n. a -> Vector n a -> Vector (n + 1) a
 cons x (Vector xs) = withNatOp (%+) (Proxy :: Proxy n) (Proxy :: Proxy 1) $ Vector $ V.cons x xs
+
+vindex :: (KnownNat i, i <= n - 1) => Vector n a -> Proxy i -> a
+vindex (Vector v) p = v V.! fromIntegral (natVal p)
+
+vhead :: (1 <= n) => Vector n a -> a
+vhead (Vector v) = V.head v
+
+vtail :: forall a n. (1 <= n) => Vector n a -> Vector (n - 1) a
+vtail (Vector v) = withNatOp (%-) (Proxy :: Proxy n) (Proxy :: Proxy 1) $ Vector (V.tail v)

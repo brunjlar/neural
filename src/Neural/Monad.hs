@@ -1,60 +1,40 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Neural.Monad
-    ( ModelM
-    , runModelM
-    , evalModelM
-    , runInitModelM
-    , evalInitModelM
+    ( ComponentM
+    , runComponentM
+    , evalComponentM
     , activateM
+    , randomizeM
     ) where
 
 import MyPrelude
 import Neural.Component
-import Neural.Layout
-import Neural.Model
 
-newtype ModelM f g a b m c = ModelM (StateT (Model f g a b) (RandT StdGen m) c)
-    deriving (Functor, Applicative, Monad, MonadState (Model f g a b), MonadRandom, MonadIO)
+newtype ComponentM a b m c = ComponentM (StateT (Component a b) (RandT StdGen m) c)
+    deriving (Functor, Applicative, Monad, MonadState (Component a b), MonadRandom, MonadIO)
 
-runModelM :: Monad m 
-             => Model f g a b
-             -> StdGen 
-             -> ModelM f g a b m c 
-             -> m (c, Model f g a b, StdGen)
-runModelM m g (ModelM mx) = 
-    runRandT (runStateT mx m) g >>= \((x, m'), g') -> 
-    return (x, m', g')
+runComponentM :: Monad m 
+                 => Component a b
+                 -> StdGen 
+                 -> ComponentM a b m c
+                 -> m (c, Component a b, StdGen)
+runComponentM c g (ComponentM m) = 
+    runRandT (runStateT m c) g >>= \((x, c'), g') -> 
+    return (x, c', g')
 
-evalModelM :: Monad m 
-              => Model f g a b
-              -> StdGen 
-              -> ModelM f g a b m c 
-              -> m c
-evalModelM m g mx = runModelM m g mx >>= \(x, _, _) -> return x
+evalComponentM :: Monad m 
+                  => Component a b
+                  -> StdGen 
+                  -> ComponentM a b m c
+                  -> m c
+evalComponentM c g m = runComponentM c g m >>= \(x, _, _) -> return x
 
-runInitModelM :: Monad m
-                 => LAYOUT f g
-                 -> (Component f g -> Model f g a b)
-                 -> StdGen
-                 -> ModelM f g a b m d
-                 -> m (d, Model f g a b, StdGen)
-runInitModelM l mkModel g mx =
-    runModelM undefined g mx' where
+activateM :: Monad m => a -> ComponentM a b m b
+activateM x = get >>= \c -> return $ activate c x
 
-        mx' = do
-            c <- componentR l
-            put $ mkModel c
-            mx
-
-evalInitModelM :: Monad m
-                  => LAYOUT f g
-                  -> (Component f g -> Model f g a b)
-                  -> StdGen
-                  -> ModelM f g a b m d
-                  -> m d
-evalInitModelM l mkModel g mx =
-    runInitModelM l mkModel g mx >>= \(x, _, _) -> return x
-
-activateM :: Monad m => a -> ModelM f g a b m b
-activateM xs = get >>= \m -> return $ activateModel m xs
+randomizeM :: Monad m => ComponentM a b m ()
+randomizeM = do
+    Component _ c i <- get
+    ws              <- i
+    put (Component ws c i)

@@ -1,55 +1,29 @@
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Neural.Descent
-    ( descent
-    , batchDescent
+    ( Err
+    , descent
     , descentM
-    , batchDescentM
-    , getModelError
-    , getModelErrorM
     ) where
 
 import MyPrelude
-import Numeric.AD
+import Neural.Analytic
 import Neural.Component
-import Neural.Layout
-import Neural.Model
 import Neural.Monad
+import Neural.Utils.Statistics (mean)
 
-descent :: Functor f => Model f g a b -> Double -> a -> (Double, Model f g a b)
-descent m eta s = case component m of
-    Component l ws -> (err, m { component = Component l ws' }) where
+type Err a b c = forall t. Component' t a b -> Component' t c Analytic
 
-        (err, ws') = gradWith'
-                         (\x dx -> x - eta * dx)
-                         (\ws'' -> modelError m auto s $ compute l ws'' $ auto <$> toInput m s)
-                         ws
+descent :: Component a b -> Err a b c -> Double -> [c] -> (Double, Component a b)
+descent (Component ws c i) err eta xs = (e, Component ws' c i) where
 
-batchDescent :: Functor f => Model f g a b -> Double -> [a] -> (Double, Model f g a b)
-batchDescent m eta xs = let im         = batch m
-                            (err, im') = descent im eta xs
-                            m'         = m & _component . _weights .~ (im' ^. _component . _weights)
-                        in  (err, m')
+    (e, ws') = gradient (\w dw -> w - eta * dw) f ws
 
-descentM :: (Functor f, Monad m) => Double -> a -> ModelM f g a b m Double 
-descentM eta s = do
-    m <- get
-    let (err, m') = descent m eta s
-    put m'
-    return err
+    f zs = mean [runC (err c) x zs | x <- xs]
 
-batchDescentM :: (Functor f, Monad m) => Double -> [a] -> ModelM f g a b m Double
-batchDescentM eta xs = do
-    m <- get
-    let (err, m') = batchDescent m eta xs
-    put m'
-    return err
-
-getModelError :: Functor f => Model f g a b -> a -> Double
-getModelError m s = let (err, _) = descent m 1 s in err
-
-getModelErrorM :: (Functor f, Monad m) => a -> ModelM f g a b m Double
-getModelErrorM s = do
-    m <- get
-    return $ getModelError m s
+descentM :: Monad m => Err a b c -> Double -> [c] -> ComponentM a b m Double
+descentM err eta xs = do
+    c <- get
+    let (e, c') = descent c err eta xs
+    put c'
+    return e

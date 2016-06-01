@@ -1,49 +1,40 @@
-{-# OPTIONS_GHC -fplugin GHC.TypeLits.Normalise #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Neural.Layer
     ( Layer
-    , LinearLayer(..)
     , linearLayer
     , layer
+    , tanhLayer
     ) where
 
+import Control.Arrow
 import Control.Category
 import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Witnesses
 import MyPrelude
 import Neural.Analytic
-import Neural.Layout
+import Neural.Component
 import Neural.Matrix
 import Neural.Vector
 import Prelude                 hiding (id, (.))
 
-type Layer i o = LAYOUT (Vector i) (Vector o)
+type Layer i o = Component (Vector i Analytic) (Vector o Analytic)
 
-data LinearLayer (i :: Nat) (o :: Nat) = LinearLayer
-
-instance (KnownNat i, KnownNat (i + 1), KnownNat o) => Layout (LinearLayer i o) where
-
-    type Source (LinearLayer i o) = Vector i
-
-    type Target (LinearLayer i o) = Vector o
-
-    type Weights (LinearLayer i o) = Matrix o (i + 1)
-
-    initR LinearLayer = sequenceA $ pure $ getRandomR (-0.001, 0.001)
-
-    compute LinearLayer m v = m <%%> cons 1 v
+linearLayer' :: Component' (Matrix o (i + 1)) (Vector i Analytic) (Vector o Analytic)
+linearLayer' = Component' $ \xs ws -> ws <%%> cons 1 xs
 
 linearLayer :: forall i o. (KnownNat i, KnownNat o) => Layer i o
-linearLayer = withNatOp (%+) (Proxy :: Proxy i) (Proxy :: Proxy 1) $ LAYOUT LinearLayer
+linearLayer = withNatOp (%+) (Proxy :: Proxy i) (Proxy :: Proxy 1) Component
+    { weights = pure 0
+    , compute = linearLayer'
+    , initR   = sequenceA $ pure $ getRandomR (-0.001, 0.001)
+    }
 
-layer :: (KnownNat i, KnownNat o) => (forall a. RealFloat a => a -> a) -> Layer i o
-layer f = analytic (fmapAnalytic f) . linearLayer
+layer :: (KnownNat i, KnownNat o) => (Analytic -> Analytic) -> Layer i o
+layer f = arr (fmap f) . linearLayer
+
+tanhLayer :: (KnownNat i, KnownNat o) => Layer i o
+tanhLayer = layer tanh

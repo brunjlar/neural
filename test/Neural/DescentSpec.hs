@@ -1,7 +1,10 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE Arrows #-}
+
 
 module Neural.DescentSpec (spec) where
 
+import Control.Arrow         hiding (loop)
 import Control.Category
 import Control.Monad.Random
 import Neural
@@ -9,30 +12,38 @@ import Prelude               hiding (id, (.))
 import Test.Hspec
 
 spec :: Spec
-spec = do
-    addSpec
-
-addSpec :: Spec
-addSpec = describe "batchDescent" $
+spec = describe "descent" $
 
     it "should approximate the square roots in [0, 4]" $
         go >>= (`shouldSatisfy` (< 0.015))
 
-l :: Layer 1 1
-l = let l1 = layer tanh  :: LAYOUT (Vector 1) (Vector 2)
-        l2 = linearLayer :: LAYOUT (Vector 2) (Vector 1)
-    in  l2 . l1
+component :: Component Double Analytic
+component = let l1        = tanhLayer :: Layer 1 2
+                l2        = linearLayer :: Layer 2 1
+                toIn x    = cons (fromDouble x) nil
+            in  toIn ^>> l1 >>> l2 >>^ vhead
 
-samples :: [(Vector 1 Double, Vector 1 Double)]
-samples = [(cons (x * x) nil, cons x nil) | x <- [0, 0.001 .. 2]]
+err :: Err Double Analytic Double
+err c = proc x -> do
+    y <- c -< x
+    let e = y - fromDouble (sqrt x)
+    returnA -< e * e
+
+fromAnalytic :: Analytic -> Double
+fromAnalytic = fromRational . toRational
+
+samples :: [Double]
+samples = [0, 0.001 .. 4]
 
 eta :: Double
-eta = 0.1
+eta = 0.03
 
 go :: IO Double
-go = evalInitModelM l stdModel (mkStdGen 691245) $ do 
+go = evalComponentM component (mkStdGen 691245) $ do 
+   
+    randomizeM
 
-    e0 <- err
+    e0 <- getErr
     liftIO $ putStrLn $ "initial error is " ++ show e0
     nl
 
@@ -53,22 +64,20 @@ go = evalInitModelM l stdModel (mkStdGen 691245) $ do
 
     nl = liftIO $ putStrLn ""
 
-    act x = do
-        ys <- activateM (cons x nil, cons (sqrt x) nil)
-        return $ head $ toList ys
+    act = fmap fromAnalytic . activateM
 
-    err' x = act x >>= \y -> return $ abs (sqrt x - y)
+    getErr' x = act x >>= \y -> return $ abs (sqrt x - y)
 
-    err = mean <$> mapM err' [0, 0.1 .. 4]
+    getErr = mean <$> mapM getErr' [0, 0.1 .. 4]
 
     step i = do
-        xs <- takeR 20 samples
-        e  <- batchDescentM eta xs
-        e' <- err
+        xs <- takeR 10 samples
+        e  <- descentM err eta xs
+        e' <- getErr
         when (i `mod` 100 == 0) $ liftIO $ printf "%6d %10.8f %10.8f\n" i e e'
         return e'
 
     loop i = do
         e' <- step i
-        if (e' < 0.015 || i == 10000) then return (i, e')
-                                      else loop (succ i)
+        if e' < 0.015 || i == 10000 then return (i, e')
+                                    else loop (succ i)

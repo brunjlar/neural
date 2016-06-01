@@ -1,40 +1,91 @@
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveTraversable #-}
 
 module Neural.Component
-    ( Component(..)
-    , _weights
+    ( Component'(..)
+    , weightsLens
+    , activate
     , componentR
-    , activateComponent
-    , iterComponent
+    , Component(..)
     ) where
 
+import Control.Arrow
 import Control.Category
 import MyPrelude
-import Prelude                  hiding (id, (.))
 import Neural.Analytic
-import Neural.Layout
 import Neural.Utils.Traversable
+import Prelude                  hiding (id, (.))
 
-data Component :: (* -> *) -> (* -> *) -> * where
+newtype Component' t a b = Component' { runC :: a -> t Analytic -> b }
 
-    Component :: Layout l => l -> Weights l Double -> Component (Source l) (Target l)
+instance Category (Component' t) where
 
-_weights :: Lens' (Component f g) [Double]
-_weights = lens (\(Component _ ws) -> toList ws)
-                (\(Component l _) ws -> let Just ws' = fromList ws in Component l ws')
+    id = arr id
 
-componentR :: MonadRandom m => LAYOUT f g -> m (Component f g)
-componentR (LAYOUT l) = Component l <$> initR l
+    Component' f . Component' g = Component' $ \x ts -> f (g x ts) ts
+
+instance Arrow (Component' t) where
+
+    arr f = Component' (\x _ -> f x)
+
+    first (Component' f) = Component' $ \(x, y) ts -> (f x ts, y)
+
+data Component a b = forall t. (Traversable t, Applicative t) => Component
+    { weights :: t Double
+    , compute :: Component' t a b
+    , initR   :: forall m. MonadRandom m => m (t Double)
+    }
+
+weightsLens :: Lens' (Component a b) [Double]
+weightsLens = lens (\(Component ws _ _)    -> toList ws)
+                   (\(Component _  c i) ws -> let Just ws' = fromList ws in Component ws' c i)
+
+activate :: Component a b -> a -> b
+activate (Component ws (Component' f) _) x = f x $ fromDouble <$> ws
+
+componentR :: MonadRandom m => Component a b -> m (Component a b)
+componentR (Component _ c i) = i >>= \ws -> return $ Component ws c i
+
+
+data Empty a = Empty deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
+
+instance Applicative Empty where
+
+    pure = const Empty
+
+    Empty <*> Empty = Empty
+
+data Pair s t a = Pair (s a) (t a) deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
+
+instance (Applicative s, Applicative t) => Applicative (Pair s t) where
+
+    pure x = Pair (pure x) (pure x)
+
+    Pair f g <*> Pair x y = Pair (f <*> x) (g <*> y)
 
 instance Category Component where
 
-    id = Component (Analytic id) Empty
+    id = arr id
 
-    (Component m ws) . (Component l ws') = Component (PairLayout m l) (Pair ws ws')
+    Component ws c i . Component ws' c' i' = Component
+        { weights = Pair ws ws'
+        , compute = Component' $ \x (Pair zs zs') -> runC c (runC c' x zs') zs 
+        , initR   = Pair <$> i <*> i'
+        }
 
-activateComponent :: Component f g -> f Double -> g Double
-activateComponent (Component l ws) = compute l ws
+instance Arrow Component where
 
-iterComponent :: Functor t => Component f g -> Component (Iter t f) (Iter t g)
-iterComponent (Component l ws) = Component (IterLayout l) ws
+    arr f = Component
+        { weights = Empty
+        , compute = arr f
+        , initR   = return Empty
+        }
+
+    first (Component ws c i) = Component
+        { weights = ws
+        , compute = first c
+        , initR   = i
+        }

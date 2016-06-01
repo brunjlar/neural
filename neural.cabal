@@ -20,8 +20,6 @@ library
                      , Neural.Component
                      , Neural.Descent
                      , Neural.Layer
-                     , Neural.Layout
-                     , Neural.Model
                      , Neural.Monad
                      , Neural.Utils
                      , Neural.Utils.List

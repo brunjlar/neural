@@ -1,20 +1,19 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Neural.Analytic
-    ( Analytic(..)
-    , fmapAnalytic
+    ( Analytic
+    , fromDouble
+    , gradient
     ) where
 
-import Control.Category
-import Prelude          hiding (id, (.))
+import qualified Numeric.AD.Rank1.Kahn as K
 
-newtype Analytic f g = Analytic (forall a. RealFloat a => f a -> g a)
+newtype Analytic = Analytic { toKahn :: K.Kahn Double }
+    deriving (Num, Eq, Floating, Fractional, Ord, Real, RealFloat, RealFrac)
 
-instance Category Analytic where
+fromDouble :: Double -> Analytic
+fromDouble = Analytic . K.auto
 
-    id = Analytic id
-
-    Analytic f . Analytic g = Analytic (f . g)
-
-fmapAnalytic :: Functor f => (forall a. RealFloat a => a -> a) -> Analytic f f
-fmapAnalytic g = Analytic $ fmap g
+gradient :: Traversable t => (Double -> Double -> a) -> (t Analytic -> Analytic) -> t Double -> (Double, t a)
+gradient c f = K.gradWith' c f' where
+    f' = toKahn . f . fmap Analytic
