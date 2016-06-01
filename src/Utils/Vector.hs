@@ -9,7 +9,8 @@ module Utils.Vector
     , (<%>)
     , nil
     , cons
-    , vindex
+    , generate
+    , (!?)
     , vhead
     , vtail
     ) where
@@ -65,8 +66,11 @@ nil = Vector V.empty
 cons :: forall a n. a -> Vector n a -> Vector (n + 1) a
 cons x (Vector xs) = withNatOp (%+) (Proxy :: Proxy n) (Proxy :: Proxy 1) $ Vector $ V.cons x xs
 
-vindex :: (KnownNat i, i <= n - 1) => Vector n a -> Proxy i -> a
-vindex (Vector v) p = v V.! fromIntegral (natVal p)
+generate :: forall n a. KnownNat n => (Int -> a) -> Vector n a
+generate = Vector . V.generate (fromIntegral $ natVal (Proxy :: Proxy n))
+
+(!?) :: Vector n a -> Int -> Maybe a
+Vector v !? i = v V.!? i
 
 vhead :: (1 <= n) => Vector n a -> a
 vhead (Vector v) = V.head v

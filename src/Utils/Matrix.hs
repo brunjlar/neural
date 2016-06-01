@@ -9,11 +9,15 @@
 module Utils.Matrix
     ( Matrix(..) 
     , (<%%>)
-    , mindex
+    , row
+    , column
+    , mgenerate
+    , (!!?)
+    , transpose
     ) where
 
-import Data.Proxy
 import GHC.TypeLits
+import MyPrelude
 import Utils.Vector
 
 newtype Matrix (m :: Nat) (n :: Nat) a = Matrix (Vector m (Vector n a)) 
@@ -28,5 +32,17 @@ instance (KnownNat m, KnownNat n) => Applicative (Matrix m n) where
 (<%%>) :: Num a => Matrix m n a -> Vector n a -> Vector m a
 Matrix rows <%%> v = (v <%>) <$> rows
 
-mindex :: (KnownNat i, KnownNat j, i <= m - 1, j <= n - 1) => Matrix m n a -> Proxy i -> Proxy j -> a
-mindex (Matrix rows) p = vindex (vindex rows p)
+row :: Matrix m n a -> Int -> Maybe (Vector n a)
+row (Matrix rows) = (rows !?)
+
+column :: Matrix m n a -> Int -> Maybe (Vector m a)
+column (Matrix rows) j = sequenceA $ (!? j) <$> rows
+
+mgenerate :: (KnownNat m, KnownNat n) => ((Int, Int) -> a) -> Matrix m n a
+mgenerate f = Matrix $ generate (\i -> generate (\j -> f (i, j)))
+
+(!!?) :: Matrix m n a -> (Int, Int) -> Maybe a
+m !!? (i, j) = row m i >>= (!? j)
+
+transpose :: (KnownNat m, KnownNat n) => Matrix m n a -> Matrix n m a
+transpose m = mgenerate $ \(i, j) -> fromJust $ m !!? (j, i)

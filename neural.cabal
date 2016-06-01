@@ -60,6 +60,8 @@ test-suite neural-test
                      , MonadRandom
                      , neural
   other-modules:       Neural.DescentSpec
+                     , Utils.MatrixSpec
+                     , Utils.VectorSpec
   ghc-options:         -Wall -threaded
   default-language:    Haskell2010
 
