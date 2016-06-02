@@ -5,6 +5,7 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE Arrows #-}
 
 {-|
 Module      : Neural.Component
@@ -29,9 +30,11 @@ module Neural.Component
 
 import Control.Arrow
 import Control.Category
+import Data.Profunctor
 import MyPrelude
 import Prelude           hiding (id, (.))
 import Utils.Analytic
+import Utils.Arrow
 import Utils.Traversable
 
 -- | The type @'Component'' t a b@ describes parameterized functions from @a@ to @b@, where the
@@ -51,6 +54,22 @@ instance Arrow (Component' t) where
     arr f = Component' (\x _ -> f x)
 
     first (Component' f) = Component' $ \(x, y) ts -> (f x ts, y)
+
+instance ArrowChoice (Component' t) where
+
+    left (Component' f) = Component' $ \ex ts -> case ex of
+        Left x  -> Left (f x ts)
+        Right y -> Right y
+
+instance ArrowConvolve (Component' t) where
+
+    convolve (Component' f) = Component' $ \xs ts -> flip f ts <$> xs
+
+instance Functor (Component' t a) where fmap = fmapArr
+
+instance Applicative (Component' t a) where pure = pureArr; (<*>) = apArr
+
+instance Profunctor (Component' t) where dimap  = dimapArr
 
 -- | A @'Component' a b@ is a parameterized function from @a@ to @b@ for /some/ collection of analytic parameters.
 --   In contrast to 'Component'', when these components are composed, each component carries its own
@@ -119,3 +138,17 @@ instance Arrow Component where
         , compute = first c
         , initR   = i
         }
+
+instance ArrowChoice Component where
+
+    left (Component ws c i) = Component ws (left c) i
+
+instance ArrowConvolve Component where
+
+    convolve (Component ws c i) = Component ws (convolve c) i
+
+instance Functor (Component a) where fmap = fmapArr
+
+instance Applicative (Component a) where pure = pureArr; (<*>) = apArr
+
+instance Profunctor Component where dimap = dimapArr
