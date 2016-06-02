@@ -56,7 +56,7 @@ instance forall n. KnownNat n => Applicative (Vector n) where
 
     pure x = let n = natVal (Proxy :: Proxy n) in Vector (V.replicate (fromIntegral n) x)
 
-    Vector fs <*> Vector xs = Vector (fs <*> xs)
+    Vector fs <*> Vector xs = Vector (V.zipWith ($) fs xs)
 
 instance Foldable (Vector n) where
 

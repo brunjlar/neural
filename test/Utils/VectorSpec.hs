@@ -12,6 +12,7 @@ spec = do
     spSpec
     vheadSpec
     vtailSpec
+    apSpec
 
 indexSpec :: Spec
 indexSpec = describe "(!?)" $ do
@@ -47,3 +48,10 @@ vtailSpec = describe "vtail" $
 
     it "should give the tail of a vector of positive length" $
         vtail (cons 1 (cons 2 nil)) `shouldBe` (cons 2 nil :: Vector 1 Int)
+
+apSpec :: Spec
+apSpec = describe "(<*>)" $
+
+    it "should be component-wise application" $ do
+        let v = cons 1 (cons 2 nil) :: Vector 2 Int
+        (+) <$> v <*> v `shouldBe` ((* 2) <$> v)

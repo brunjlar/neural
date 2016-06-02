@@ -12,6 +12,7 @@ spec = do
     columnSpec
     indexSpec
     transposeSpec
+    apSpec
 
 mulSpec :: Spec
 mulSpec = describe "(<%%>)" $
@@ -58,6 +59,12 @@ transposeSpec = describe "transpose" $
 
     it "should transpose the matrix" $
         transpose m `shouldBe` mgenerate (\(i, j) -> 3 * j + i + 1)
+
+apSpec :: Spec
+apSpec = describe "(<*>)" $
+
+    it "should be component-wise application" $
+        (-) <$> m <*> m `shouldBe` pure 0 
 
 m :: Matrix 2 3 Int
 m = mgenerate $ \(i, j) -> 3 * i + j + 1 -- 1 2 3
