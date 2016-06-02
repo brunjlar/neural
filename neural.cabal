@@ -16,9 +16,9 @@ library
   hs-source-dirs:      src
   exposed-modules:     Neural
                      , MyPrelude
-                     , Neural.Component
                      , Neural.Descent
                      , Neural.Layer
+                     , Neural.Model
                      , Neural.Monad
                      , Utils
                      , Utils.Analytic

@@ -26,13 +26,15 @@ module Utils.Arrow
 import Control.Arrow
 
 -- | Arrows implementing 'ArrowConvolve' can be mapped over containers.
---   This means that every functor (@F :: Hask -> Hask@) lifts to a functor (@F' :: Hask -> a@).
+--   This means that every functor (@f :: Hask -> Hask@) lifts to a functor (@a -> a@).
 --
 --   Instances should satisfy the following laws:
 --
 --   * @convolve id = id@
 --
---   * @convolve (a . b) = convolve a . convolve b@
+--   * @convolve (g . h) = convolve g . convolve h@
+--
+--   * @convolve . arr = arr . fmap@
 --
 class Arrow a => ArrowConvolve a where
 
@@ -49,7 +51,7 @@ fmapArr f a = a >>^ f
 pureArr :: Arrow a => c -> a b c
 pureArr = arr . const
 
--- | A function to define '(<*>)' for arrows.
+-- | A function to define @('<*>')@ for arrows.
 -- Combining this with 'pureArr', the canonical 'Applicative' instance for arrows can easily be defined.
 --
 apArr :: Arrow a => a b (c -> d) -> a b c -> a b d

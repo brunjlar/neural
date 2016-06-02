@@ -17,7 +17,7 @@ import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Witnesses
 import MyPrelude
-import Neural.Component
+import Neural.Model
 import Prelude                 hiding (id, (.))
 import Utils.Analytic
 import Utils.Matrix
@@ -25,8 +25,8 @@ import Utils.Vector
 
 type Layer i o = Component (Vector i Analytic) (Vector o Analytic)
 
-linearLayer' :: Component' (Matrix o (i + 1)) (Vector i Analytic) (Vector o Analytic)
-linearLayer' = Component' $ \xs ws -> ws <%%> cons 1 xs
+linearLayer' :: ParamFun (Matrix o (i + 1)) (Vector i Analytic) (Vector o Analytic)
+linearLayer' = ParamFun $ \xs ws -> ws <%%> cons 1 xs
 
 linearLayer :: forall i o. (KnownNat i, KnownNat o) => Layer i o
 linearLayer = withNatOp (%+) (Proxy :: Proxy i) (Proxy :: Proxy 1) Component
@@ -48,4 +48,3 @@ softmax :: (Floating a, Functor f, Foldable f) => f a -> f a
 softmax xs = let xs' = exp <$> xs
                  s   = sum xs'
              in  (/ s) <$> xs'
-
