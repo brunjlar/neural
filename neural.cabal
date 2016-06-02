@@ -63,7 +63,7 @@ test-suite neural-test
   other-modules:       Neural.DescentSpec
                      , Utils.MatrixSpec
                      , Utils.VectorSpec
-  ghc-options:         -Wall -threaded
+  ghc-options:         -Wall -threaded -rtsopts -O2 -with-rtsopts=-N -fexcess-precision -optc-O3 -optc-ffast-math
   default-language:    Haskell2010
 
 test-suite neural-doctest
@@ -73,7 +73,18 @@ test-suite neural-doctest
   build-depends:       base >= 4.7 && < 5
                      , doctest
                      , neural
-  ghc-options:         -Wall -threaded
+  ghc-options:         -Wall -threaded -rtsopts -O2 -with-rtsopts=-N -fexcess-precision -optc-O3 -optc-ffast-math
+
+  default-language:    Haskell2010
+
+executable iris
+  hs-source-dirs:      examples/iris
+  main-is:             iris.hs
+  build-depends:       base >= 4.7 && < 5
+                     , attoparsec
+                     , neural
+                     , text
+  ghc-options:         -Wall -threaded -rtsopts -O2 -with-rtsopts=-N -fexcess-precision -optc-O3 -optc-ffast-math
   default-language:    Haskell2010
 
 source-repository head

@@ -7,6 +7,8 @@ module Neural.Layer
     , linearLayer
     , layer
     , tanhLayer
+    , logisticLayer
+    , softmax
     ) where
 
 import Control.Arrow
@@ -38,3 +40,12 @@ layer f = arr (fmap f) . linearLayer
 
 tanhLayer :: (KnownNat i, KnownNat o) => Layer i o
 tanhLayer = layer tanh
+
+logisticLayer :: (KnownNat i, KnownNat o) => Layer i o
+logisticLayer = layer $ \x -> 1 / (1 + exp (- x))
+
+softmax :: (Floating a, Functor f, Foldable f) => f a -> f a
+softmax xs = let xs' = exp <$> xs
+                 s   = sum xs'
+             in  (/ s) <$> xs'
+

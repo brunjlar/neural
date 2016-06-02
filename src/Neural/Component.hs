@@ -5,7 +5,6 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE Arrows #-}
 
 {-|
 Module      : Neural.Component

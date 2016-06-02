@@ -17,6 +17,7 @@ A special case of this is the /backpropagation algorithm/ for neural networks.
 
 module Neural.Descent
     ( Err
+    , getError
     , descent'
     , descent
     , descentM
@@ -36,6 +37,12 @@ import Utils.Statistics (mean)
 --
 type Err a b c = forall t. Component' t a b -> Component' t c Analytic
 
+-- | Computes the average error of a component for an error transformation and collection of samples.
+--
+getError :: (Functor f, Foldable f) => Component a b -> Err a b c -> f c -> Analytic
+getError (Component ws c _) err xs = let c' = convolve (err c) >>^ toList >>^ mean
+                                     in  runC c' xs $ fromDouble <$> ws
+
 -- | This function performs one step of gradient descent for the given component and error transformation.
 --
 descent' :: Component a b              -- ^ the component whose error should be decreased 
@@ -54,9 +61,9 @@ descent :: Component a b              -- ^ the component whose error should be d
            -> Double                  -- ^ the learning rate
            -> [c]                     -- ^ the mini batch of samples
            -> (Double, Component a b) -- ^ the mean error and the improved component
-descent c err eta xs = descent' c err' eta xs where
+descent c err = descent' c err' where
 
-    err' = \c' -> convolve (err c') >>^ mean
+    err' c' = convolve (err c') >>^ mean
 
 -- | This is the monadic version of 'descent': It performs one step of gradient descent on a 'mini batch'
 --   of samples and implicitly updates the state-component's weights.
