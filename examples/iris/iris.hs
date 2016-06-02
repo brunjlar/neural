@@ -50,20 +50,20 @@ data Attributes = Attributes Double Double Double Double deriving (Show, Read, E
 
 type Sample = (Attributes, Iris)
 
-irisParser :: Parser Iris
-irisParser =     string "Iris-setosa"     *> return Setosa
-             <|> string "Iris-versicolor" *> return Versicolor
-             <|> string "Iris-virginica"  *> return Virginica
-
-
-
 sampleParser :: Parser Sample
 sampleParser = f <$> (double <* char ',')
                  <*> (double <* char ',')
                  <*> (double <* char ',')
                  <*> (double <* char ',')
                  <*> irisParser
-    where f sl sw pl pw i = (Attributes sl sw pl pw, i)
+  where 
+  
+    f sl sw pl pw i = (Attributes sl sw pl pw, i)
+
+    irisParser :: Parser Iris
+    irisParser =     string "Iris-setosa"     *> return Setosa
+                 <|> string "Iris-versicolor" *> return Versicolor
+                 <|> string "Iris-virginica"  *> return Virginica
 
 readSamples :: IO [Sample]
 readSamples = do
