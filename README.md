@@ -10,5 +10,5 @@ they either
 - offer a limitted choice of network architectures, training algorithms or error functions
   and are not easily extensible.
 
-The goal of this library is to have an implementation in native Haskell (and yet is reasonably efficient)
-and offers maximal flexibility.
+The goal of this library is to have an implementation in native Haskell (reasonably efficient)
+which offers maximal flexibility.
