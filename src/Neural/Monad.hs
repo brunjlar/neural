@@ -23,24 +23,24 @@ module Neural.Monad
     , modelM
     , errorM
     , randomizeM
+    , descentM
     ) where
 
 import MyPrelude
 import Neural.Model
-import Utils.Analytic
 
--- | The @'ModelM' a b c d e m@ monad simplifies working with models of type @'Model' a b c d e@.
+-- | The @'ModelM' f g a b c m@ monad simplifies working with models of type @'Model' f g a b c@.
 --
-newtype ModelM a b c d e m x = ModelM (StateT (Model a b c d e) (RandT StdGen m) x)
-    deriving (Functor, Applicative, Monad, MonadState (Model a b c d e), MonadRandom, MonadIO)
+newtype ModelM f g a b c m x = ModelM (StateT (Model f g a b c) (RandT StdGen m) x)
+    deriving (Functor, Applicative, Monad, MonadState (Model f g a b c), MonadRandom, MonadIO)
 
--- | Runs a computation in the @'ModelM' a b c d e m@ monad.
+-- | Runs a computation in the @'ModelM' f g a b c m@ monad.
 --
 runModelM :: Monad m 
-             => Model a b c d e                -- ^ initial model
+             => Model f g a b c                -- ^ initial model
              -> StdGen                         -- ^ initial random number generator
-             -> ModelM a b c d e m x           -- ^ the monadic expression to run
-             -> m (x, Model a b c d e, StdGen) -- ^ returns result, new model and new random number generator
+             -> ModelM f g a b c m x           -- ^ the monadic expression to run
+             -> m (x, Model f g a b c, StdGen) -- ^ returns result, new model and new random number generator
 runModelM m g (ModelM y) = 
     runRandT (runStateT y m) g >>= \((x, m'), g') -> 
     return (x, m', g')
@@ -48,26 +48,39 @@ runModelM m g (ModelM y) =
 -- | Evaluates a computation in the @'ModelM' a b c d e m@ monad.
 --
 evalModelM :: Monad m 
-              => Model a b c d e      -- ^ initial model
+              => Model f g a b c      -- ^ initial model
               -> StdGen               -- ^ initial random number generator
-              -> ModelM a b c d e m x -- ^ the monadic expression to evaluate
+              -> ModelM f g a b c m x -- ^ the monadic expression to evaluate
               -> m x                  -- ^ returns the result
 evalModelM m g y = runModelM m g y >>= \(x, _, _) -> return x
 
 -- | Monadic version of 'model'.
 --
-modelM :: Monad m => d -> ModelM a b c d e m e
-modelM d = get >>= \m -> return $ model m d
+modelM :: Monad m => b -> ModelM f g a b c m c
+modelM b = get >>= \m -> return $ model m b
 
 -- | Monadic version of 'errorModel'.
 --
-errorM :: (Foldable f, Monad m) => f c -> ModelM a b c d e m Analytic
+errorM :: (Foldable h, Monad m) => h a -> ModelM f g a b c m Double
 errorM xs = get >>= \m -> return $ modelError m xs
 
 -- | Monadic version of 'modelR'.
 --
-randomizeM :: Monad m => ModelM a b c d e m ()
+randomizeM :: Monad m => ModelM f g a b c m ()
 randomizeM = do
     m  <- get
     m' <- modelR m
     put m'
+
+-- | This is the monadic version of 'descent': It performs one step of gradient descent on a "mini batch"
+--   of samples and returns the average sample error.
+--
+descentM :: (Foldable h, Monad m)
+            => Double                    -- ^ the learning rate
+            -> h a                       -- ^ the mini batch of samples
+            -> ModelM f g a b c m Double -- ^ returns the average error 
+descentM eta xs = do
+    m <- get
+    let (e, m') = descent m eta xs
+    put m'
+    return e

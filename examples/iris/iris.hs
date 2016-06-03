@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE Arrows #-}
 {-# LANGUAGE DataKinds #-}
 
 import           Control.Applicative
@@ -16,7 +15,7 @@ main = do
     printf "read %d samples\n" (length xs)
     evalModelM irisModel (mkStdGen 123456) $ do
 
-        let getError' = (fromJust . fromAnalytic) <$> errorM xs
+        let getError' = errorM xs
 
         let getQuota = do
                 ys <- mapM modelM $ fst <$> xs
@@ -74,35 +73,32 @@ readSamples = do
 
     f l = let Right x = parseOnly sampleParser l in x
 
-irisModel :: Model Attributes (Vector 3 Analytic) Sample Attributes Iris
-irisModel = Model
-    { component = c
-    , err       = e
-    , finalize  = (>>^ toIris)
-    }
+irisModel :: StdModel (Vector 4) (Vector 3) Attributes Iris
+irisModel = mkStdModel
+    c
+    e
+    (\(Attributes sl sw pl pw) -> cons sl (cons sw (cons pl (cons pw nil)))) 
+    toIris
 
   where
 
-    c :: Component Attributes (Vector 3 Analytic)
+    c :: Layer 4 3
     c = let l1 = tanhLayer :: Layer 4 2
             l2 = tanhLayer :: Layer 2 3
-            f (Attributes sl sw pl pw) = cons sl (cons sw (cons pl (cons pw nil)))
-        in  f ^>> fmap fromDouble ^>> l1 >>> l2 >>^ softmax
+        in  l1 >>> l2 >>^ softmax
 
-    e :: Err Attributes (Vector 3 Analytic) Sample
-    e c' = proc (a, i) -> do
-        y <- c' -< a
+    e :: Iris -> Vector 3 Analytic -> Analytic
+    e i y =
         let y' = case i of
                     Setosa     -> cons 1 (cons 0 (cons 0 nil))
                     Versicolor -> cons 0 (cons 1 (cons 0 nil))
                     Virginica  -> cons 0 (cons 0 (cons 1 nil))
             d  = (-) <$> y <*> y'
-        returnA -< d <%> d
+        in  d <%> d
 
-    toIris :: Vector 3 Analytic -> Iris
+    toIris :: Vector 3 Double -> Iris
     toIris ys = let [y0, y1, y2] = toList ys
                 in if y0 >= max y1 y2
                        then Setosa
                        else if y1 >= y2 then Versicolor
                                         else Virginica
-                                 

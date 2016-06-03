@@ -6,6 +6,8 @@
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
 
 {-|
 Module      : Neural.Model
@@ -28,13 +30,11 @@ module Neural.Model
     , Component(..)
     , weightsLens
     , activate
-    , CTransform
-    , Err
-    , withCTransform
     , Model(..)
     , model
-    , modelError
     , modelR
+    , modelError
+    , descent
     , StdModel
     , mkStdModel
     ) where
@@ -160,72 +160,83 @@ instance Applicative (Component a) where pure = pureArr; (<*>) = apArr
 
 instance Profunctor Component where dimap = dimapArr
 
--- | A 'CTransform' can be thought of as a transformation of components that preserves the parameter collection.
+-- | A @'Model' f g a b c@ wraps a @'Component' (f 'Analytic') (g 'Analytic')@
+--   and models functions @b -> c@ with "samples" (for model error determination)
+--   of type @a@.
 --
-type CTransform a b c d = forall t. ParamFun t a b -> ParamFun t c d
+data Model :: (* -> *) -> (* -> *) -> * -> * -> * -> * where
 
--- | Function 'withCTransform' temporarily "unwraps" a component to get to the encapsulated parameterized function,
---   applies the 'CTransform' to get a transformed component with the same weight collection,
---   then applies an arbitrary function to the transformed component.
+    Model :: (Functor f, Functor g) 
+             => Component (f Analytic) (g Analytic)
+             -> (a -> (f Double, g Analytic -> Analytic)) 
+             -> (b -> f Double)                          
+             -> (g Double -> c)                         
+             -> Model f g a b c
+
+instance Profunctor (Model f g a) where
+
+    dimap m n (Model c e i o) = Model c e (i . m) (n . o)
+
+-- | Computes the modelled function.
+model :: Model f g a b c -> b -> c
+model (Model c _ i o) = activate $ i ^>> fmap fromDouble ^>> c >>^ fmap (fromJust . fromAnalytic) >>^ o
+
+-- | Generates a model with randomly initialized weights. All other properties are copied from the provided model. 
+modelR :: MonadRandom m => Model f g a b c -> m (Model f g a b c)
+modelR (Model c e i o) = case c of
+    Component _ f r -> do
+        ws <- r
+        return $ Model (Component ws f r) e i o
+
+errFun :: (Functor f, Foldable h, Traversable t)
+          => (a -> (f Double, g Analytic -> Analytic))
+          -> h a
+          -> ParamFun t (f Analytic) (g Analytic)
+          -> (t Analytic -> Analytic)
+errFun e xs f = runPF f' xs where
+
+    f' = toList ^>> convolve f'' >>^ mean
+
+    f'' = proc x -> do
+        let (x', h) = e x
+            x''     = fromDouble <$> x'
+        y <- f -< x''
+        returnA -< h y
+
+-- | Calculates the avarage model error for a "mini-batch" of samples.
 --
-withCTransform :: CTransform a b c d      -- ^ the transformation
-                  -> Component a b        -- ^ the component to transform
-                  -> (Component c d -> e) -- ^ the function to apply to the transformed component
-                  -> e                    
-withCTransform t (Component ws c i) f = f $ Component ws (t c) i
+modelError :: Foldable h => Model f g a b c -> h a -> Double
+modelError (Model c e _ _) xs = case c of
+    Component ws f _ -> let f'  = errFun e xs f
+                            f'' = fromJust . fromAnalytic . f' . fmap fromDouble
+                        in  f'' ws
 
--- | An element @err@ of @'Err' a b c@ can be used to measure the error of a component.
---   This makes it possible to later use gradient descent to minimize @c@'s error with respect to @err@.
+-- | Performs one step of gradient descent/ backpropagation on the model,
+descent :: (Foldable h)
+           => Model f g a b c           -- ^ the model whose error should be decreased 
+           -> Double                    -- ^ the learning rate
+           -> h a                       -- ^ a mini-batch of samples
+           -> (Double, Model f g a b c) -- ^ returns the average sample error and the improved model
+descent (Model c e i o) eta xs = case c of
+    Component ws f r ->
+        let f' = errFun e xs f
+            (err, ws') = gradient (\w dw -> w - eta * dw) f' ws
+            c'         = Component ws' f r
+            m          = Model c' e i o
+        in  (err, m)
+
+-- | A type abbreviation for the most common type of models, where samples are just input-output tuples.
+type StdModel f g b c = Model f g (b, c) b c
+
+-- | Creates a 'StdModel', using the simplifying assumtion that the error can be computed from the expected
+--   output allone.
 --
-type Err a b c = CTransform a b c Analytic
+mkStdModel :: (Functor f, Functor g) 
+              => Component (f Analytic) (g Analytic)
+              -> (c -> g Analytic -> Analytic)
+              -> (b -> f Double)
+              -> (g Double -> c)
+              -> StdModel f g b c
+mkStdModel c e i o = Model c e' i o where
 
--- | A @'Model' a b c d e@ models functions @d -> e@. 
---   It encapsulates a component from @a@ to @b@ and can measure errors on samples of type @c@.
---
-data Model a b c d e = Model
-    { component :: Component a b      -- ^ the underlying component
-    , err       :: Err a b c          -- ^ measures the model error
-    , finalize  :: CTransform a b d e -- ^ adapts the component to the right type for modelling purposes
-    } 
-
--- | Evaluates a model.
-model :: Model a b c d e -> d -> e
-model m x = withCTransform (finalize m) (component m) (`activate` x)
-
--- | Gives the average model error for the specified samples.
---
-modelError :: Foldable f => Model a b c d e -> f c -> Analytic
-modelError m xs = withCTransform (err m) (component m) $ \c -> mean $ activate c <$> toList xs
-
--- | Sets the parameters randomly, but keeps all other properties of a component.
---
-modelR :: MonadRandom m => Model a b c d e -> m (Model a b c d e)
-modelR m = case component m of
-    Component _ c i -> do
-        ws <- i
-        return $ m { component = Component ws c i }
-
--- | Type abbreviation for the most common model type, where the core component maps a collection
---   of analytic values to another such collection, where a sample is simply an input-output tuple
---   and where the error is determined by the desired output.
-type StdModel f g a b = Model (f Analytic) (g Analytic) (a, b) a b
-
--- | This function makes it easy to create a standard model.
-mkStdModel :: Component (f Analytic) (g Analytic) -- ^ the core component
-              -> (a -> f Analytic)                -- ^ converts inputs to analytic values
-              -> (g Analytic -> b)                -- ^ gets the output from analytic values
-              -> (b -> g Analytic -> Analytic)    -- ^ computes the error
-              -> StdModel f g a b                 -- ^ returns a standard model
-mkStdModel c fromIn toOut e = Model
-    { component = c
-    , err       = e'
-    , finalize  = f
-    }
-
-  where
-
-    e' c' = proc (a, b) -> do
-        ys <- c' -< fromIn a
-        returnA -< e b ys
-
-    f c' = fromIn ^>> c' >>^ toOut 
+    e' (x, y) = (i x, e y)

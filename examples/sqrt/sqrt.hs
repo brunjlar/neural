@@ -1,50 +1,13 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE Arrows #-}
 
-module Neural.DescentSpec (spec) where
-
-import Control.Arrow         hiding (loop)
+import Control.Arrow        hiding (loop)
 import Control.Monad.Random
 import MyPrelude
 import Neural
-import Test.Hspec
 import Utils
 
-spec :: Spec
-spec = describe "descent" $
-
-    it "should approximate the square roots in [0, 4]" $
-        go >>= (`shouldSatisfy` (< 0.015))
-
-sqrtModel :: Model Double Analytic Double Double Double
-sqrtModel = Model
-    { component = c
-    , err       = e
-    , finalize  = (>>^ fromAnalytic >>^ fromJust)
-    }
-
-  where
-
-    c :: Component Double Analytic
-    c = let l1     = tanhLayer :: Layer 1 2
-            l2     = linearLayer :: Layer 2 1
-            toIn x = cons (fromDouble x) nil
-        in  toIn ^>> l1 >>> l2 >>^ vhead
-
-    e :: Err Double Analytic Double
-    e c' = proc x -> do
-      y <- c' -< x
-      let d = y - fromDouble (sqrt x)
-      returnA -< d * d
-
-samples :: [Double]
-samples = [0, 0.001 .. 4]
-
-eta :: Double
-eta = 0.03
-
-go :: IO Double
-go = evalModelM sqrtModel (mkStdGen 691245) $ do 
+main :: IO ()
+main = evalModelM sqrtModel (mkStdGen 691245) $ do 
    
     randomizeM
 
@@ -62,8 +25,6 @@ go = evalModelM sqrtModel (mkStdGen 691245) $ do
         let y  = sqrt x
             e' = abs (y - y')
         liftIO $ printf "%3.1f %10.8f %10.8f %10.8f\n" x y y' e'
-    
-    return e
 
   where
 
@@ -84,3 +45,24 @@ go = evalModelM sqrtModel (mkStdGen 691245) $ do
         e' <- step i
         if e' < 0.015 || i == 10000 then return (i, e')
                                     else loop (succ i)
+
+sqrtModel :: StdModel (Vector 1) (Vector 1) Double Double
+sqrtModel = mkStdModel c e pure vhead
+
+  where
+
+    c :: Layer 1 1
+    c = let l1 = tanhLayer   :: Layer 1 2
+            l2 = linearLayer :: Layer 2 1
+        in  l1 >>> l2
+
+    e :: Double -> Vector 1 Analytic -> Analytic
+    e y y' = let d = (-) <$> y' <*> pure (fromDouble y)
+             in  d <%> d
+
+samples :: [(Double, Double)]
+samples = [(x, sqrt x) | x <- [0, 0.001 .. 4]]
+
+eta :: Double
+eta = 0.03
+
