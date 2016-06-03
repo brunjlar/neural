@@ -5,6 +5,7 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE Arrows #-}
 
 {-|
 Module      : Neural.Model
@@ -34,6 +35,8 @@ module Neural.Model
     , model
     , modelError
     , modelR
+    , StdModel
+    , mkStdModel
     ) where
 
 import Control.Arrow
@@ -201,3 +204,28 @@ modelR m = case component m of
     Component _ c i -> do
         ws <- i
         return $ m { component = Component ws c i }
+
+-- | Type abbreviation for the most common model type, where the core component maps a collection
+--   of analytic values to another such collection, where a sample is simply an input-output tuple
+--   and where the error is determined by the desired output.
+type StdModel f g a b = Model (f Analytic) (g Analytic) (a, b) a b
+
+-- | This function makes it easy to create a standard model.
+mkStdModel :: Component (f Analytic) (g Analytic) -- ^ the core component
+              -> (a -> f Analytic)                -- ^ converts inputs to analytic values
+              -> (g Analytic -> b)                -- ^ gets the output from analytic values
+              -> (b -> g Analytic -> Analytic)    -- ^ computes the error
+              -> StdModel f g a b                 -- ^ returns a standard model
+mkStdModel c fromIn toOut e = Model
+    { component = c
+    , err       = e'
+    , finalize  = f
+    }
+
+  where
+
+    e' c' = proc (a, b) -> do
+        ys <- c' -< fromIn a
+        returnA -< e b ys
+
+    f c' = fromIn ^>> c' >>^ toOut 
