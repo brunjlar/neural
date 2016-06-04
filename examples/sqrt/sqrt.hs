@@ -4,65 +4,50 @@ import Control.Arrow        hiding (loop)
 import Control.Monad.Random
 import MyPrelude
 import Neural
+import Pipes
 import Utils
 
 main :: IO ()
-main = evalModelM sqrtModel (mkStdGen 691245) $ do 
-   
-    randomizeM
-
-    e0 <- getErr
-    liftIO $ putStrLn $ "initial error is " ++ show e0
-    nl
-
-    (i, e) <- loop (1 :: Int)
-    nl
-    liftIO $ printf "%d steps, error: %f\n" i e
-    nl
-
+main = do
+    ts <- flip evalRandT (mkStdGen 691245) $ do
+        m <- modelR sqrtModel
+        runEffect $
+                simpleBatchP [(x, sqrt x) | x <- [0, 0.001 .. 4]] 10
+            >-> descentP m 1 (const 0.03) 
+            >-> reportTSP 100 report
+            >-> consumeTSP check
+    
+    let m = tsModel ts
     forM_ [0 :: Double, 0.1 .. 4] $ \x -> do
-        y' <- modelM x
-        let y  = sqrt x
-            e' = abs (y - y')
-        liftIO $ printf "%3.1f %10.8f %10.8f %10.8f\n" x y y' e'
+        let y' = model m x
+            y  = sqrt x
+            e = abs (y - y')
+        printf "%3.1f %10.8f %10.8f %10.8f\n" x y y' e
 
   where
 
-    nl = liftIO $ putStrLn ""
+    sqrtModel :: StdModel (Vector 1) (Vector 1) Double Double
+    sqrtModel = mkStdModel c e pure vhead
 
-    getErr' x = modelM x >>= \y -> return $ abs (sqrt x - y)
+      where
 
-    getErr = mean <$> mapM getErr' [0, 0.1 .. 4]
+        c :: Layer 1 1
+        c = let l1 = tanhLayer   :: Layer 1 2
+                l2 = linearLayer :: Layer 2 1
+            in  l1 >>> l2
 
-    step i = do
-        xs <- takeR 10 samples
-        e  <- descentM eta xs
-        e' <- getErr
-        when (i `mod` 100 == 0) $ liftIO $ printf "%6d %10.8f %10.8f\n" i e e'
-        return e'
+        e :: Double -> Vector 1 Analytic -> Analytic
+        e y y' = let d = (-) <$> y' <*> pure (fromDouble y)
+                 in  d <%> d
+    getErr ts = let m = tsModel ts in mean [abs (sqrt x - model m x) | x <- [0, 0.1 .. 4]]
 
-    loop i = do
-        e' <- step i
-        if e' < 0.015 || i == 10000 then return (i, e')
-                                    else loop (succ i)
+    report ts = do
+        let e = getErr ts
+        liftIO $ printf "%6d %10.8f %10.8f\n" (tsGeneration ts) (tsBatchError ts) e
 
-sqrtModel :: StdModel (Vector 1) (Vector 1) Double Double
-sqrtModel = mkStdModel c e pure vhead
-
-  where
-
-    c :: Layer 1 1
-    c = let l1 = tanhLayer   :: Layer 1 2
-            l2 = linearLayer :: Layer 2 1
-        in  l1 >>> l2
-
-    e :: Double -> Vector 1 Analytic -> Analytic
-    e y y' = let d = (-) <$> y' <*> pure (fromDouble y)
-             in  d <%> d
-
-samples :: [(Double, Double)]
-samples = [(x, sqrt x) | x <- [0, 0.001 .. 4]]
-
-eta :: Double
-eta = 0.03
-
+    check ts = do
+        let e = getErr ts
+        if e < 0.015 then do
+            liftIO $ printf "\nmodel error after %d generations: %f\n\n" (tsGeneration ts)  e
+            return True
+                     else return False
