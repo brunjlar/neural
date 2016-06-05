@@ -15,9 +15,11 @@ This module reexports all the neural network related modules for convenience.
 module Neural
     ( module Neural.Layer
     , module Neural.Model
+    , module Neural.Normalization
     , module Neural.Pipes
     ) where
 
 import Neural.Layer
 import Neural.Model
+import Neural.Normalization
 import Neural.Pipes

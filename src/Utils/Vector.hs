@@ -31,6 +31,8 @@ module Utils.Vector
     , (<->)
     , sqNorm
     , sqDiff
+    , KnownNat
+    , natVal
     ) where
 
 import           Data.Proxy

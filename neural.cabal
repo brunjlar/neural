@@ -18,6 +18,7 @@ library
                      , MyPrelude
                      , Neural.Layer
                      , Neural.Model
+                     , Neural.Normalization
                      , Neural.Pipes
                      , Utils
                      , Utils.Analytic

@@ -29,7 +29,7 @@ main = do
     check xs ts = return $
         let g = tsGeneration ts
             q = getQuota xs ts
-        in  if (g `mod` 1000 == 0 && q >= 0.99)
+        in  if g `mod` 1000 == 0 && q >= 0.99
             then Just (g, q)
             else Nothing
 
@@ -71,29 +71,7 @@ readSamples = do
 
 irisModel :: StdModel (Vector 4) (Vector 3) Attributes Iris
 irisModel = mkStdModel
-    c
-    e
+    ((tanhLayer :: Layer 4 2) >>> (tanhLayer :: Layer 2 3) >>^ softmax)
+    (sqDiff . encode1ofN)
     (\(Attributes sl sw pl pw) -> cons sl (cons sw (cons pl (cons pw nil)))) 
-    toIris
-
-  where
-
-    c :: Layer 4 3
-    c = let l1 = tanhLayer :: Layer 4 2
-            l2 = tanhLayer :: Layer 2 3
-        in  l1 >>> l2 >>^ softmax
-
-    e :: Iris -> Vector 3 Analytic -> Analytic
-    e i y =
-        let y' = case i of
-                    Setosa     -> cons 1 (cons 0 (cons 0 nil))
-                    Versicolor -> cons 0 (cons 1 (cons 0 nil))
-                    Virginica  -> cons 0 (cons 0 (cons 1 nil))
-        in  sqDiff y y'
-
-    toIris :: Vector 3 Double -> Iris
-    toIris ys = let [y0, y1, y2] = toList ys
-                in if y0 >= max y1 y2
-                       then Setosa
-                       else if y1 >= y2 then Versicolor
-                                        else Virginica
+    decode1ofN
