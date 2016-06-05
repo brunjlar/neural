@@ -129,9 +129,7 @@ Vector v !? i = v V.!? i
 -- *** Exception: Utils.Vector.!: invalid index 
 --
 (!) :: Vector n a -> Int -> a
-v ! i = case v !? i of
-    Just x  -> x
-    Nothing -> error "Utils.Vector.!: invalid index"
+v ! i = fromMaybe (error "Utils.Vector.!: invalid index")   (v !? i)
 
 -- | Gets the first element of a vector of length greater than zero.
 --

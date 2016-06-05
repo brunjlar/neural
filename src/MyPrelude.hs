@@ -13,7 +13,7 @@ module MyPrelude
     , toList
     , on
     , sort, sortBy, minimumBy, maximumBy, foldl', intercalate
-    , catMaybes, fromJust
+    , catMaybes, fromJust, fromMaybe
     , (<>)
     , getDirectoryContents
     , getArgs
@@ -36,7 +36,7 @@ import Data.Either                (lefts, rights)
 import Data.Foldable              (toList)
 import Data.Function              (on)
 import Data.List                  (sort, sortBy, minimumBy, maximumBy, foldl', intercalate)
-import Data.Maybe                 (catMaybes, fromJust)
+import Data.Maybe                 (catMaybes, fromJust, fromMaybe)
 import Data.Monoid                ((<>))
 import System.Directory           (getDirectoryContents)
 import System.Environment         (getArgs)
