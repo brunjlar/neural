@@ -18,6 +18,7 @@ module Neural.Pipes
     , simpleBatchP
     , reportTSP
     , consumeTSP
+    , module Pipes
     ) where
 
 import           MyPrelude
@@ -74,15 +75,16 @@ reportTSP n act = P.mapM $ \ts -> do
     when (tsGeneration ts `mod` n == 0) (act ts)
     return ts
 
--- | A 'Consumer' of training states that decides when training is finished and then returns the last training state.
+-- | A 'Consumer' of training states that decides when training is finished and then returns a value.
 --
 consumeTSP :: Monad m
-              => (TS f g a b c -> m Bool)                 -- ^ check whether training is finished
-              -> Consumer (TS f g a b c) m (TS f g a b c)
+              => (TS f g a b c -> m (Maybe x)) -- ^ check whether training is finished and what to return in that case
+              -> Consumer (TS f g a b c) m x
 consumeTSP check = loop where
 
     loop = do
         ts <- await
-        b <- lift (check ts)
-        if b then return ts
-             else loop
+        mx <- lift (check ts)
+        case mx of
+            Just x  -> return x
+            Nothing -> loop 

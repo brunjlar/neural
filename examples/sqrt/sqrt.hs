@@ -4,12 +4,11 @@ import Control.Arrow        hiding (loop)
 import Control.Monad.Random
 import MyPrelude
 import Neural
-import Pipes
 import Utils
 
 main :: IO ()
 main = do
-    ts <- flip evalRandT (mkStdGen 691245) $ do
+    m <- flip evalRandT (mkStdGen 691245) $ do
         m <- modelR sqrtModel
         runEffect $
                 simpleBatchP [(x, sqrt x) | x <- [0, 0.001 .. 4]] 10
@@ -17,7 +16,6 @@ main = do
             >-> reportTSP 100 report
             >-> consumeTSP check
     
-    let m = tsModel ts
     forM_ [0 :: Double, 0.1 .. 4] $ \x -> do
         let y' = model m x
             y  = sqrt x
@@ -39,6 +37,7 @@ main = do
         e :: Double -> Vector 1 Analytic -> Analytic
         e y y' = let d = (-) <$> y' <*> pure (fromDouble y)
                  in  d <%> d
+
     getErr ts = let m = tsModel ts in mean [abs (sqrt x - model m x) | x <- [0, 0.1 .. 4]]
 
     report ts = do
@@ -49,5 +48,5 @@ main = do
         let e = getErr ts
         if e < 0.015 then do
             liftIO $ printf "\nmodel error after %d generations: %f\n\n" (tsGeneration ts)  e
-            return True
-                     else return False
+            return $ Just (tsModel ts)
+                     else return Nothing

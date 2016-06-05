@@ -27,6 +27,10 @@ module Utils.Vector
     , (!?)
     , vhead
     , vtail
+    , (<+>)
+    , (<->)
+    , sqNorm
+    , sqDiff
     ) where
 
 import           Data.Proxy
@@ -128,3 +132,44 @@ vhead (Vector v) = V.head v
 --
 vtail :: forall a n. (1 <= n) => Vector n a -> Vector (n - 1) a
 vtail (Vector v) = withNatOp (%-) (Proxy :: Proxy n) (Proxy :: Proxy 1) $ Vector (V.tail v)
+
+infixl 6 <+>
+
+-- | Adds two vectors of the same length.
+--
+-- >>> :set -XDataKinds
+-- >>> (cons 1 (cons 2 nil)) <+> (cons 3 (cons 4 nil)) :: Vector 2 Int
+-- [4,6]
+--
+(<+>) :: (Num a, KnownNat n) => Vector n a -> Vector n a -> Vector n a
+v <+> w = (+) <$> v <*> w
+
+infixl 6 <->
+
+-- | Subtracts two vectors of the same length.
+--
+-- >>> :set -XDataKinds
+-- >>> (cons 1 (cons 2 nil)) <-> (cons 3 (cons 4 nil)) :: Vector 2 Int
+-- [-2,-2]
+--
+(<->) :: (Num a, KnownNat n) => Vector n a -> Vector n a -> Vector n a
+v <-> w = (-) <$> v <*> w
+
+-- | Calculates the /squared/ euclidean norm of a vector,
+--   i.e. the scalar product of the vector by itself.
+--
+-- >>> :set -XDataKinds
+-- >>> sqNorm (cons 3 (cons 4 nil)) :: Int
+-- 25
+--
+sqNorm :: (Num a, KnownNat n) => Vector n a -> a
+sqNorm v = v <%> v
+
+-- | Calculates the /squared/ euclidean distance between two vectors of the same length.
+--
+-- >>> :set -XDataKinds
+-- >>> sqDiff (cons 1 (cons 2 nil)) (cons 3 (cons 4 nil)) :: Int
+-- 8
+--
+sqDiff :: (Num a, KnownNat n) => Vector n a -> Vector n a -> a
+sqDiff v w = sqNorm (v <-> w)

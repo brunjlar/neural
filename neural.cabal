@@ -18,7 +18,6 @@ library
                      , MyPrelude
                      , Neural.Layer
                      , Neural.Model
-                     , Neural.Monad
                      , Neural.Pipes
                      , Utils
                      , Utils.Analytic
@@ -93,7 +92,6 @@ executable sqrt
   build-depends:       base >= 4.7 && < 5
                      , MonadRandom
                      , neural
-                     , pipes
   ghc-options:         -Wall -threaded -rtsopts -O2 -with-rtsopts=-N -fexcess-precision -optc-O3 -optc-ffast-math
   default-language:    Haskell2010
 

@@ -13,35 +13,31 @@ main :: IO ()
 main = do
     xs <- readSamples
     printf "read %d samples\n" (length xs)
-    evalModelM irisModel (mkStdGen 123456) $ do
+    (g, q) <- flip evalRandT (mkStdGen 123456) $ do
+        m <- modelR irisModel
+        runEffect $
+                simpleBatchP xs 10
+            >-> descentP m 1 (const 0.0001) 
+            >-> reportTSP 1000 (report xs)
+            >-> consumeTSP (check xs)
+    printf "reached prediction accuracy of %5.3f after %d generations" q g
 
-        let getError' = errorM xs
+  where
 
-        let getQuota = do
-                ys <- mapM modelM $ fst <$> xs
-                let n = length $ filter (uncurry (==)) $ zip ys $ snd <$> xs
-                    q = fromIntegral n / fromIntegral (length xs) :: Double
-                return q
+    report xs ts = liftIO $ printf "%6d %8.6f %6.4f\n" (tsGeneration ts) (tsBatchError ts) (getQuota xs ts)
 
-        let loop i = do
-                batch <- takeR batchSize xs
-                _     <- descentM eta batch
-                if i `mod` 1000 == 0 
-                    then do
-                        e <- getError'
-                        q <- getQuota
-                        liftIO $ printf "%6d %8.6f %6.4f\n" i e q
-                        unless (q >= 0.99) $ loop (succ i)
-                    else loop (succ i)
+    check xs ts = return $
+        let g = tsGeneration ts
+            q = getQuota xs ts
+        in  if (g `mod` 1000 == 0 && q >= 0.99)
+            then Just (g, q)
+            else Nothing
 
-        randomizeM
-        loop (1 :: Int)
-
-batchSize :: Int
-batchSize = 10
-
-eta :: Double
-eta = 0.0001
+    getQuota xs ts =
+        let ys = map (model $ tsModel ts) $ fst <$> xs :: [Iris]
+            n  = length $ filter (uncurry (==)) $ zip ys $ snd <$> xs
+            q  = fromIntegral n / fromIntegral (length xs) :: Double
+        in  q
 
 data Iris = Setosa | Versicolor | Virginica deriving (Show, Read, Eq, Ord, Enum)
 
@@ -93,8 +89,7 @@ irisModel = mkStdModel
                     Setosa     -> cons 1 (cons 0 (cons 0 nil))
                     Versicolor -> cons 0 (cons 1 (cons 0 nil))
                     Virginica  -> cons 0 (cons 0 (cons 1 nil))
-            d  = (-) <$> y <*> y'
-        in  d <%> d
+        in  sqDiff y y'
 
     toIris :: Vector 3 Double -> Iris
     toIris ys = let [y0, y1, y2] = toList ys
