@@ -25,6 +25,7 @@ module Utils.Vector
     , cons
     , generate
     , (!?)
+    , (!)
     , vhead
     , vtail
     , (<+>)
@@ -118,6 +119,19 @@ generate = Vector . V.generate (fromIntegral $ natVal (Proxy :: Proxy n))
 --
 (!?) :: Vector n a -> Int -> Maybe a
 Vector v !? i = v V.!? i
+
+-- | Gets the vector element at the specified index, throws an exception if the index is invalid.
+--
+-- >>> cons 'x' nil ! 0
+-- 'x'
+--
+-- >>> cons 'x' nil ! 1
+-- *** Exception: Utils.Vector.!: invalid index 
+--
+(!) :: Vector n a -> Int -> a
+v ! i = case v !? i of
+    Just x  -> x
+    Nothing -> error "Utils.Vector.!: invalid index"
 
 -- | Gets the first element of a vector of length greater than zero.
 --

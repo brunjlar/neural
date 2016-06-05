@@ -25,18 +25,11 @@ main = do
   where
 
     sqrtModel :: StdModel (Vector 1) (Vector 1) Double Double
-    sqrtModel = mkStdModel c e pure vhead
-
-      where
-
-        c :: Layer 1 1
-        c = let l1 = tanhLayer   :: Layer 1 2
-                l2 = linearLayer :: Layer 2 1
-            in  l1 >>> l2
-
-        e :: Double -> Vector 1 Analytic -> Analytic
-        e y y' = let d = (-) <$> y' <*> pure (fromDouble y)
-                 in  d <%> d
+    sqrtModel = mkStdModel
+        ((tanhLayer :: Layer 1 2) >>> linearLayer)
+        (sqDiff . pure . fromDouble)
+        pure 
+        vhead
 
     getErr ts = let m = tsModel ts in mean [abs (sqrt x - model m x) | x <- [0, 0.1 .. 4]]
 

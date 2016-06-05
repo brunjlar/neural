@@ -20,7 +20,7 @@ main = do
             >-> descentP m 1 (const 0.0001) 
             >-> reportTSP 1000 (report xs)
             >-> consumeTSP (check xs)
-    printf "reached prediction accuracy of %5.3f after %d generations" q g
+    printf "reached prediction accuracy of %5.3f after %d generations\n" q g
 
   where
 
@@ -71,7 +71,7 @@ readSamples = do
 
 irisModel :: StdModel (Vector 4) (Vector 3) Attributes Iris
 irisModel = mkStdModel
-    ((tanhLayer :: Layer 4 2) >>> (tanhLayer :: Layer 2 3) >>^ softmax)
+    ((tanhLayer :: Layer 4 2) >>> tanhLayer >>^ softmax)
     (sqDiff . encode1ofN)
     (\(Attributes sl sw pl pw) -> cons sl (cons sw (cons pl (cons pw nil)))) 
     decode1ofN

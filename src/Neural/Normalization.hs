@@ -48,3 +48,5 @@ encode1ofN x = generate $ \i -> if i == fromEnum x then 1 else 0
 --
 decode1ofN :: (Enum a, Num b, Ord b, Foldable f) => f b -> a
 decode1ofN = toEnum . fst . maximumBy (compare `on` snd) . zip [0..] . toList
+
+
