@@ -1,7 +1,30 @@
 name:                neural
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Neural Networks in native Haskell
-description:         Please see README.md
+description:         
+  The goal of `neural` is to provide a modular and flexible neural network library written in native Haskell.
+  .
+  Features include 
+  .
+  * /composability/ via 
+    <https://hackage.haskell.org/package/base-4.9.0.0/docs/Control-Arrow.html Arrow> instances and 
+    <https://hackage.haskell.org/package/pipes pipes>,
+  .
+  * /automatic differentiation/ for automatic gradient descent/ backpropagation training
+    (using Edward Kmett's fabulous <https://hackage.haskell.org/package/ad ad> library).
+  .
+  The idea is to be able to easily define new components and wire them up in flexible, possibly
+  complicated ways (convolutional deep networks etc.).
+  .
+  Two examples are included as proof of concept:
+  .
+  * A simple neural network that approximates the sqrt function on [0,4].
+  .
+  * A slightly more complicated neural network that solves the famous 
+    <https://en.wikipedia.org/wiki/Iris_flower_data_set Iris flower> problem.
+  .
+  The library is still very much experimental at this point.
+
 homepage:            http://github.com/brunjlar/neural
 license:             MIT
 license-file:        LICENSE
