@@ -25,12 +25,13 @@ description:
   .
   The library is still very much experimental at this point.
 
-homepage:            http://github.com/brunjlar/neural
+homepage:            https://github.com/brunjlar/neural
+bug-reports:         https://github.com/brunjlar/neural/issues
 license:             MIT
 license-file:        LICENSE
 author:              Lars Bruenjes
 maintainer:          brunjlar@gmail.com
-copyright:           Copyright: (c) 2016 Dr. Lars Bruenjes
+copyright:           Copyright: (c) 2016 Lars Bruenjes
 category:            Machine Learning
 build-type:          Simple
 cabal-version:       >=1.10
