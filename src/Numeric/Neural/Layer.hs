@@ -5,7 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
-Module      : Neural.Layer
+Module      : Numeric.Neural.Layer
 Description : layer components
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -16,7 +16,7 @@ Portability : portable
 This modules defines special "layer" components and convenience functions for the creation of such layers.
 -}
 
-module Neural.Layer
+module Numeric.Neural.Layer
     ( Layer
     , linearLayer
     , layer
@@ -30,12 +30,12 @@ import Control.Category
 import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Witnesses
-import MyPrelude
-import Neural.Model
+import Data.MyPrelude
+import Numeric.Neural.Model
 import Prelude                 hiding (id, (.))
-import Utils.Analytic
-import Utils.Matrix
-import Utils.Vector
+import Data.Utils.Analytic
+import Data.Utils.Matrix
+import Data.Utils.Vector
 
 -- | A @'Layer' i o@ is a component that maps a vector of length @i@ to a vector of length @j@.
 --

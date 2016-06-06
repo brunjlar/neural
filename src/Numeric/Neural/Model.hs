@@ -25,7 +25,7 @@ are instances of the 'Arrow' typeclass and can therefore be combined easily and 
 backpropagation.
 -}
 
-module Neural.Model
+module Numeric.Neural.Model
     ( ParamFun(..)
     , Component(..)
     , weightsLens
@@ -42,12 +42,12 @@ module Neural.Model
 import Control.Arrow
 import Control.Category
 import Data.Profunctor
-import MyPrelude
+import Data.MyPrelude
 import Prelude           hiding (id, (.))
-import Utils.Analytic
-import Utils.Arrow
-import Utils.Statistics  (mean)
-import Utils.Traversable
+import Data.Utils.Analytic
+import Data.Utils.Arrow
+import Data.Utils.Statistics  (mean)
+import Data.Utils.Traversable
 
 -- | The type @'ParamFun' t a b@ describes parameterized functions from @a@ to @b@, where the
 --   parameters are of type @t 'Analytic'@.

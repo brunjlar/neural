@@ -7,7 +7,7 @@
 {-# LANGUAGE TypeOperators #-}
 
 {-|
-Module      : Utils.Vector
+Module      : Data.Utils.Vector
 Description : fixed-length vectors
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -18,7 +18,7 @@ Portability : portable
 This module defines fixed-length /vectors/ and some basic typeclass instances and operations for them.
 -}
 
-module Utils.Vector
+module Data.Utils.Vector
     ( Vector
     , (<%>)
     , nil
@@ -40,7 +40,7 @@ import           Data.Proxy
 import qualified Data.Vector            as V
 import           GHC.TypeLits
 import           GHC.TypeLits.Witnesses
-import           MyPrelude
+import           Data.MyPrelude
 
 -- | @'Vector' n a@ is the type of vectors of length @n@ with elements of type @a@.
 data Vector :: Nat -> * -> * where
@@ -126,10 +126,10 @@ Vector v !? i = v V.!? i
 -- 'x'
 --
 -- >>> cons 'x' nil ! 1
--- *** Exception: Utils.Vector.!: invalid index 
+-- *** Exception: Data.Utils.Vector.!: invalid index 
 --
 (!) :: Vector n a -> Int -> a
-v ! i = fromMaybe (error "Utils.Vector.!: invalid index")   (v !? i)
+v ! i = fromMaybe (error "Data.Utils.Vector.!: invalid index")   (v !? i)
 
 -- | Gets the first element of a vector of length greater than zero.
 --

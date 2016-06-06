@@ -1,4 +1,18 @@
-module MyPrelude
+{-# OPTIONS_HADDOCK show-extensions #-}
+
+{-|
+Module      : Data.MyPrelude
+Description : commonly used standard types and functions
+Copyright   : (c) Lars Brünjes, 2016
+License     : MIT
+Maintainer  : brunjlar@gmail.com
+Stability   : experimental
+Portability : portable
+
+This module simply reexports a selection of commonly used standard types and functions.
+-}
+
+module Data.MyPrelude
     ( NFData(..)
     , (&), (^.), (.~), Lens', Getter, to, lens
     , when, unless, forM, forM_, void, replicateM, forever, guard

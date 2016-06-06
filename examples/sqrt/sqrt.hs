@@ -2,9 +2,9 @@
 
 import Control.Arrow        hiding (loop)
 import Control.Monad.Random
-import MyPrelude
-import Neural
-import Utils
+import Data.MyPrelude
+import Numeric.Neural
+import Data.Utils
 
 main :: IO ()
 main = do

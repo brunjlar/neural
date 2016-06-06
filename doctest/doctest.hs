@@ -1,12 +1,12 @@
 import Test.DocTest
 
 main :: IO ()
-main = doctest [ "src/Neural/Normalization.hs"
-               , "src/Utils/Analytic.hs"
-               , "src/Utils/Matrix.hs"
-               , "src/Utils/List.hs"
-               , "src/Utils/Random.hs"
-               , "src/Utils/Statistics.hs"
-               , "src/Utils/Traversable.hs"
-               , "src/Utils/Vector.hs"
+main = doctest [ "src/Data/Utils/Analytic.hs"
+               , "src/Data/Utils/Matrix.hs"
+               , "src/Data/Utils/List.hs"
+               , "src/Data/Utils/Random.hs"
+               , "src/Data/Utils/Statistics.hs"
+               , "src/Data/Utils/Traversable.hs"
+               , "src/Data/Utils/Vector.hs"
+               , "src/Numeric/Neural/Normalization.hs"
                ]

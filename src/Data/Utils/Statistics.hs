@@ -6,7 +6,7 @@
 {-# LANGUAGE DeriveFunctor #-}
 
 {-|
-Module      : Utils.Statistics
+Module      : Data.Utils.Statistics
 Description : statistical utilities
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -17,7 +17,7 @@ Portability : portable
 This module provides utilities for working with statistics.
 -}
 
-module Utils.Statistics
+module Data.Utils.Statistics
     ( Probability
     , probability
     , fromProbability

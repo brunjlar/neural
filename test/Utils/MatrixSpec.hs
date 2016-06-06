@@ -3,7 +3,7 @@
 module Utils.MatrixSpec (spec) where
 
 import Test.Hspec
-import Utils
+import Data.Utils
 
 spec :: Spec
 spec = do

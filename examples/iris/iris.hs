@@ -5,9 +5,9 @@ import           Control.Applicative
 import           Control.Arrow        hiding (loop)
 import           Data.Attoparsec.Text
 import qualified Data.Text            as T
-import           MyPrelude
-import           Neural
-import           Utils
+import           Data.MyPrelude
+import           Numeric.Neural
+import           Data.Utils
 
 main :: IO ()
 main = do

@@ -1,7 +1,7 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 {-|
-Module      : Utils.Traversable
+Module      : Data.Utils.Traversable
 Description : utilities for traversables
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -12,13 +12,13 @@ Portability : portable
 This module contains utility functions related to the 'Traversable' typeclass.
 -}
 
-module Utils.Traversable
+module Data.Utils.Traversable
     ( fromList
     , safeHead
     ) where
 
-import MyPrelude
-import Utils.Stack
+import Data.MyPrelude
+import Data.Utils.Stack
 
 -- | Tries to create a traversable (which must also be applicative) from a list.
 --   If the list contains too few elements, 'Nothing' is returned,

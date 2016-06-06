@@ -3,7 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 {-|
-Module      : Utils.Stack
+Module      : Data.Utils.Stack
 Description : a simple stack monad
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -15,7 +15,7 @@ This module defines the 'StackT' monad transformer,
 which is simply a wrapped state monad whose state is a list.
 -}
 
-module Utils.Stack
+module Data.Utils.Stack
     ( StackT
     , pop
     , peek
@@ -30,7 +30,7 @@ module Utils.Stack
     ) where
 
 import Control.Monad.Trans.Class (MonadTrans)
-import MyPrelude
+import Data.MyPrelude
 
 -- | A computation of type @'StackT' s m a@ has access to a stack of elements of type @s@.
 --

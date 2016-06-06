@@ -4,7 +4,7 @@
 {-# LANGUAGE RankNTypes #-}
 
 {-|
-Module      : Utils.Arrow
+Module      : Data.Utils.Arrow
 Description : arrow utilities
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -15,7 +15,7 @@ Portability : portable
 This module defines utility functions for /arrows/.
 -}
 
-module Utils.Arrow
+module Data.Utils.Arrow
     ( ArrowConvolve(..)
     , fmapArr
     , pureArr

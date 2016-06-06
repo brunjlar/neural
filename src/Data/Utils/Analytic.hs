@@ -3,7 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 {-|
-Module      : Utils.Analytic
+Module      : Data.Utils.Analytic
 Description : "analytic" values
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -14,7 +14,7 @@ Portability : portable
 This module defines the numeric type 'Analytic', which has "built in differentiation".
 -}
 
-module Utils.Analytic
+module Data.Utils.Analytic
     ( Analytic
     , fromDouble
     , fromAnalytic

@@ -4,7 +4,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 {-|
-Module      : Utils.List
+Module      : Data.Utils.List
 Description : list utilities
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -15,7 +15,7 @@ Portability : portable
 This module provides various utilities for working with lists.
 -}
 
-module Utils.List
+module Data.Utils.List
     ( splitLast
     , pick
     , distribute

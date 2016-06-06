@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeFamilies #-}
 
 {-|
-Module      : Utils.Matrix
+Module      : Data.Utils.Matrix
 Description : fixed-size matrices
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -20,7 +20,7 @@ Portability : portable
 This module defines fixed-size /matrices/ and some basic typeclass instances and operations for them.
 -}
 
-module Utils.Matrix
+module Data.Utils.Matrix
     ( Matrix(..) 
     , (<%%>)
     , row
@@ -31,8 +31,8 @@ module Utils.Matrix
     ) where
 
 import GHC.TypeLits
-import MyPrelude
-import Utils.Vector
+import Data.MyPrelude
+import Data.Utils.Vector
 
 -- | @'Matrix' m n a@ is the type of /matrices/ with @m@ rows, @n@ columns and entries of type @a@.
 --

@@ -5,7 +5,7 @@
 {-# LANGUAGE DataKinds #-}
 
 {-|
-Module      : Neural.Normalization
+Module      : Numeric.Neural.Normalization
 Description : normalizing data
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -16,7 +16,7 @@ Portability : portable
 This modules provides utilities for data normalization.
 -}
 
-module Neural.Normalization
+module Numeric.Neural.Normalization
     ( encode1ofN
     , decode1ofN
     , encodeEquiDist
@@ -27,9 +27,9 @@ module Neural.Normalization
 import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Witnesses
-import MyPrelude
-import Utils.Traversable
-import Utils.Vector
+import Data.MyPrelude
+import Data.Utils.Traversable
+import Data.Utils.Vector
 
 -- | Provides "1 of @n@" encoding for enumerable types.
 --

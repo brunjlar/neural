@@ -1,7 +1,7 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 {-|
-Module      : Neural.Pipes
+Module      : Numeric.Neural.Pipes
 Description : a pipes API for models
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -12,7 +12,7 @@ Portability : portable
 This modules provides a "pipes"-based API for working with models.
 -}
 
-module Neural.Pipes
+module Numeric.Neural.Pipes
     ( TS(..)
     , descentP
     , simpleBatchP
@@ -21,9 +21,9 @@ module Neural.Pipes
     , module Pipes
     ) where
 
-import           MyPrelude
-import           Neural.Model
-import           Utils.Random  (takeR)
+import           Data.MyPrelude
+import           Numeric.Neural.Model
+import           Data.Utils.Random  (takeR)
 import           Pipes
 import qualified Pipes.Prelude as P
 

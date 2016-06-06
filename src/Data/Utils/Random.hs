@@ -4,7 +4,7 @@
 {-# LANGUAGE BangPatterns #-}
 
 {-|
-Module      : Utils.Random
+Module      : Data.Utils.Random
 Description : random number utilities
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -15,7 +15,7 @@ Portability : portable
 This module provides utilities for working with module 'Control.Monad.Random'.
 -}
 
-module Utils.Random
+module Data.Utils.Random
     ( pickR'
     , pickR
     , takeR'
@@ -33,7 +33,7 @@ import qualified Control.Monad.ST.Trans    as ST
 import           Control.Monad.Trans.Class (lift)
 import qualified Data.Array                as A
 import           Data.List                 (mapAccumL)
-import           Utils.List                (pick)
+import           Data.Utils.List           (pick)
 
 pickR'' :: MonadRandom m => Int -> [a] -> m (a, [a])
 pickR'' l xs = do
