@@ -25,6 +25,13 @@ description:
   .
   The library is still very much experimental at this point.
 
+extra-source-files:
+  .travis.yml
+  .gitignore
+  .ghci
+  stack.yaml
+  README.markdown
+
 homepage:            https://github.com/brunjlar/neural
 bug-reports:         https://github.com/brunjlar/neural/issues
 license:             MIT
