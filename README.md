@@ -1,5 +1,7 @@
 # neural - Neural Nets in native Haskell
 
+[![Build Status](https://travis-ci.org/brunjlar/neural.svg?branch=master)](https://travis-ci.org/brunjlar/neural)
+
 The goal of this project is to provide a flexible framework for 
 [neural networks](https://en.wikipedia.org/wiki/Artificial_neural_network) 
 (and similar parameterized models) in Haskell.
