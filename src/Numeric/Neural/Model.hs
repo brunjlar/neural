@@ -83,7 +83,7 @@ instance Applicative (ParamFun t a) where pure = pureArr; (<*>) = apArr
 
 instance Profunctor (ParamFun t) where dimap  = dimapArr
 
--- | A @'Model' a b@ is a parameterized function from @a@ to @b@, combined with /some/ collection of analytic parameters,
+-- | A @'Component' a b@ is a parameterized function from @a@ to @b@, combined with /some/ collection of analytic parameters,
 --   In contrast to 'ParamFun', when components are composed, parameters are not shared. 
 --   Each component carries its own collection of parameters instead.
 --
