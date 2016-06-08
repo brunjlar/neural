@@ -1,12 +1,10 @@
-import Test.DocTest
+module Main (main) where
+
+import System.FilePath.Glob (glob)
+import Test.DocTest (doctest)
 
 main :: IO ()
-main = doctest [ "src/Data/Utils/Analytic.hs"
-               , "src/Data/Utils/Matrix.hs"
-               , "src/Data/Utils/List.hs"
-               , "src/Data/Utils/Random.hs"
-               , "src/Data/Utils/Statistics.hs"
-               , "src/Data/Utils/Traversable.hs"
-               , "src/Data/Utils/Vector.hs"
-               , "src/Numeric/Neural/Normalization.hs"
-               ]
+main = do
+  glob "src/**/*.hs"           >>= doctest
+  glob "examples/iris/**/*.hs" >>= doctest
+  glob "examples/sqrt/**/*.hs" >>= doctest
