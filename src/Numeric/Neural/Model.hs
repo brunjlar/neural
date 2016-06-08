@@ -28,9 +28,10 @@ backpropagation.
 module Numeric.Neural.Model
     ( ParamFun(..)
     , Component(..)
-    , weightsLens
+    , _weights
     , activate
     , Model(..)
+    , _component
     , model
     , modelR
     , modelError
@@ -43,7 +44,7 @@ import Control.Arrow
 import Control.Category
 import Data.Profunctor
 import Data.MyPrelude
-import Prelude           hiding (id, (.))
+import Prelude                hiding (id, (.))
 import Data.Utils.Analytic
 import Data.Utils.Arrow
 import Data.Utils.Statistics  (mean)
@@ -97,9 +98,9 @@ data Component a b = forall t. (Traversable t, Applicative t) => Component
 --   The shape of the parameter collection is hidden by existential quantification,
 --   so this lens has to use simple generic lists.
 --
-weightsLens :: Lens' (Component a b) [Double]
-weightsLens = lens (\(Component ws _ _)    -> toList ws)
-                   (\(Component _  c i) ws -> let Just ws' = fromList ws in Component ws' c i)
+_weights:: Lens' (Component a b) [Double]
+_weights= lens (\(Component ws _ _)    -> toList ws)
+               (\(Component _  c i) ws -> let Just ws' = fromList ws in Component ws' c i)
 
 -- | Activates a component, i.e. applies it to the specified input, using the current parameter values.
 --
@@ -176,6 +177,12 @@ data Model :: (* -> *) -> (* -> *) -> * -> * -> * -> * where
 instance Profunctor (Model f g a) where
 
     dimap m n (Model c e i o) = Model c e (i . m) (n . o)
+
+-- | A 'Lens' for accessing the component embedded in a model.
+--
+_component :: Lens' (Model f g a b c) (Component (f Analytic) (g Analytic))
+_component = lens (\(Model c _ _ _) -> c)
+                  (\(Model _ e i o) c -> Model c e i o)
 
 -- | Computes the modelled function.
 model :: Model f g a b c -> b -> c

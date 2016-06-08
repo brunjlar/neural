@@ -1,5 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 
+module Main where
+
 import Control.Arrow        hiding (loop)
 import Control.Monad.Random
 import Data.MyPrelude

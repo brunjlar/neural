@@ -22,6 +22,7 @@ module Numeric.Neural.Layer
     , layer
     , tanhLayer
     , logisticLayer
+    , reLULayer
     , softmax
     ) where
 
@@ -78,6 +79,12 @@ tanhLayer = layer tanh
 --
 logisticLayer :: (KnownNat i, KnownNat o) => Layer i o
 logisticLayer = layer $ \x -> 1 / (1 + exp (- x))
+
+-- | This is simply 'layer', specialized to the /rectified linear unit/ activation function. 
+--   Output values are all non-negative.
+--
+reLULayer :: (KnownNat i, KnownNat o) => Layer i o
+reLULayer = layer $ \x -> max 0 x
 
 -- | The 'softmax' function normalizes a vector, so that all entries are in [0,1] with sum 1. 
 --   This means the output entries can be interpreted as probabilities.

@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
 
+module Main where
+
 import           Control.Applicative
 import           Control.Arrow        hiding (loop)
 import           Data.Attoparsec.Text
