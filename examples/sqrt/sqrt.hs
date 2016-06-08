@@ -8,6 +8,7 @@ import Data.Utils
 
 main :: IO ()
 main = do
+    putStrLn "generation  batch error  model error\n"
     m <- flip evalRandT (mkStdGen 691245) $ do
         m <- modelR sqrtModel
         runEffect $
@@ -15,12 +16,13 @@ main = do
             >-> descentP m 1 (const 0.03) 
             >-> reportTSP 100 report
             >-> consumeTSP check
-    
+   
+    putStrLn "  x      sqrt x   predicted       error\n"
     forM_ [0 :: Double, 0.1 .. 4] $ \x -> do
         let y' = model m x
             y  = sqrt x
             e = abs (y - y')
-        printf "%3.1f %10.8f %10.8f %10.8f\n" x y y' e
+        printf "%3.1f  %10.8f  %10.8f  %10.8f\n" x y y' e
 
   where
 
@@ -35,7 +37,7 @@ main = do
 
     report ts = do
         let e = getErr ts
-        liftIO $ printf "%6d %10.8f %10.8f\n" (tsGeneration ts) (tsBatchError ts) e
+        liftIO $ printf "    %6d   %10.8f   %10.8f\n" (tsGeneration ts) (tsBatchError ts) e
 
     check ts = do
         let e = getErr ts

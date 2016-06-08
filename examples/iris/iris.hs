@@ -12,7 +12,8 @@ import           Data.Utils
 main :: IO ()
 main = do
     xs <- readSamples
-    printf "read %d samples\n" (length xs)
+    printf "read %d samples\n\n" (length xs)
+    printf "generation  learning rate  model error  accuracy\n\n"
     (g, q) <- flip evalRandT (mkStdGen 123456) $ do
         m <- modelR irisModel
         runEffect $
@@ -20,12 +21,12 @@ main = do
             >-> descentP m 1 (\i -> 0.02 * 5000 / (5000 + fromIntegral i))
             >-> reportTSP 1000 (report xs)
             >-> consumeTSP (check xs)
-    printf "reached prediction accuracy of %5.3f after %d generations\n" q g
+    printf "\nreached prediction accuracy of %5.3f after %d generations\n" q g
 
   where
 
     report xs ts = liftIO $ 
-        printf "%6d %6.4f %8.6f %6.4f\n" (tsGeneration ts) (tsEta ts) (modelError (tsModel ts) xs) (getQuota xs ts)
+        printf "%10d %14.4f %12.6f %9.4f\n" (tsGeneration ts) (tsEta ts) (modelError (tsModel ts) xs) (getQuota xs ts)
 
     check xs ts = return $
         let g = tsGeneration ts
