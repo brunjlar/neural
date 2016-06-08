@@ -30,11 +30,11 @@ import Control.Category
 import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Witnesses
-import Data.MyPrelude
 import Numeric.Neural.Model
 import Prelude                 hiding (id, (.))
 import Data.Utils.Analytic
 import Data.Utils.Matrix
+import Data.Utils.Random
 import Data.Utils.Vector
 
 -- | A @'Layer' i o@ is a component that maps a vector of length @i@ to a vector of length @j@.
@@ -45,13 +45,24 @@ linearLayer' :: ParamFun (Matrix o (i + 1)) (Vector i Analytic) (Vector o Analyt
 linearLayer' = ParamFun $ \xs ws -> ws <%%> cons 1 xs
 
 -- | Creates a /linear/ 'Layer', i.e. a layer that multiplies the input with a weight matrix and adds a bias to get the output.
---
+--   
+--   Random initialization follows the recommendation from chapter 3 of the online book 
+--   <http://neuralnetworksanddeeplearning.com/ Neural Networks and Deep Learning> by Michael Nielsen.
 linearLayer :: forall i o. (KnownNat i, KnownNat o) => Layer i o
-linearLayer = withNatOp (%+) (Proxy :: Proxy i) (Proxy :: Proxy 1) Component
+linearLayer = withNatOp (%+) p (Proxy :: Proxy 1) Component
     { weights = pure 0
     , compute = linearLayer'
-    , initR   = sequenceA $ pure $ getRandomR (-0.001, 0.001)
+    , initR   = sequenceA $ mgenerate r
     }
+
+  where
+
+    p = Proxy :: Proxy i
+
+    s = 1 / sqrt (fromIntegral $ natVal p)
+
+    r (_, 0) = boxMuller
+    r (_, _) = boxMuller' 0 s
 
 -- | Creates a 'Layer' as a combination of a linear layer and a non-linear activation function.
 --

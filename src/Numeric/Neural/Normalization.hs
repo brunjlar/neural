@@ -22,14 +22,20 @@ module Numeric.Neural.Normalization
     , encodeEquiDist
     , decodeEquiDist
     , crossEntropyError
+    , white
+    , whiten
     ) where
 
+import Control.Arrow
 import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Witnesses
 import Data.MyPrelude
+import Data.Utils.Analytic
+import Data.Utils.Statistics
 import Data.Utils.Traversable
 import Data.Utils.Vector
+import Numeric.Neural.Model
 
 -- | Provides "1 of @n@" encoding for enumerable types.
 --
@@ -131,3 +137,33 @@ decodeEquiDist y = let xs  = polyhedron' (Proxy :: Proxy n)
 --
 crossEntropyError :: (Enum a, Floating b, KnownNat n) => a -> Vector n b -> b
 crossEntropyError a ys = negate $ log $ encode1ofN a <%> ys
+
+-- | Function 'white' takes a batch of values (of a specific shape)
+--   and computes a normalization function which whitens values of that shape,
+--   so that each component has zero mean and unit variance.
+--
+-- >>> :set -XDataKinds
+-- >>> let xss = [cons 1 (cons 1 nil), cons 1 (cons 2 nil), cons 1 (cons 3 nil)] :: [Vector 2 Float]
+-- >>> let f   = white xss
+-- >>> f <$> xss
+-- [[0.0,-1.224745],[0.0,0.0],[0.0,1.224745]]
+white :: (Applicative f, Traversable t, Eq a, Floating a) => t (f a) -> f a -> f a
+white xss = ((w <$> sequenceA xss) <*>) where
+
+    w xs = case toList xs of
+        []  -> id
+        xs' -> let (_, m, v) = countMeanVar xs'
+                   s         = if v == 0 then 1 else 1 / sqrt v
+               in  \x -> (x - m) * s
+
+-- | Modifies a 'Model' by whitening the input before feeding it into the embedded component.
+--
+whiten :: (Applicative f, Traversable t)
+          => Model f g a b c             -- ^ original model 
+          -> t b                         -- ^ batch of input data
+          -> Model f g a b c             
+whiten (Model c e i o) xss = Model c' e i o where
+
+    c' = white xss' ^>> c
+
+    xss' = (fmap fromDouble . i) <$> xss

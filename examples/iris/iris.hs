@@ -15,10 +15,10 @@ main = do
     printf "read %d samples\n\n" (length xs)
     printf "generation  learning rate  model error  accuracy\n\n"
     (g, q) <- flip evalRandT (mkStdGen 123456) $ do
-        m <- modelR irisModel
+        m <- modelR (whiten irisModel $ fst <$> xs)
         runEffect $
                 simpleBatchP xs 5
-            >-> descentP m 1 (\i -> 0.02 * 5000 / (5000 + fromIntegral i))
+            >-> descentP m 1 (\i -> 0.1 * 5000 / (5000 + fromIntegral i))
             >-> reportTSP 1000 (report xs)
             >-> consumeTSP (check xs)
     printf "\nreached prediction accuracy of %5.3f after %d generations\n" q g
