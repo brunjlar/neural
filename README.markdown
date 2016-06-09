@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/brunjlar/neural.svg?branch=master)](https://travis-ci.org/brunjlar/neural)
 
+## Motivation
+
 The goal of this project is to provide a flexible framework for 
 [neural networks](https://en.wikipedia.org/wiki/Artificial_neural_network) 
 (and similar parameterized models) in Haskell.
@@ -29,3 +31,11 @@ available combinators or [arrow notation](http://downloads.haskell.org/~ghc/8.0.
 Even though neural networks are the primary motivation for this project, any other kind of model can be
 defined in the same framework, whenever the model depends on a collection of numerical parameters in a differentiable
 way. - One simple example for this would be [linear regression](https://en.wikipedia.org/wiki/Linear_regression).
+
+## Examples
+
+At the moment, two examples are included:
+
+- [sqrt](examples/sqrt) models the regression problem of approximating the square root function on the interval [0,4].
+
+- [iris](examples/iris) solves the famous [Iris Flower](https://en.wikipedia.org/wiki/Iris_flower_data_set) classification problem.
