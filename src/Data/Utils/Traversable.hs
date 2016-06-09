@@ -14,10 +14,8 @@ This module contains utility functions related to the 'Traversable' typeclass.
 
 module Data.Utils.Traversable
     ( fromList
-    , safeHead
     ) where
 
-import Data.MyPrelude
 import Data.Utils.Stack
 
 -- | Tries to create a traversable (which must also be applicative) from a list.
@@ -31,14 +29,3 @@ import Data.Utils.Stack
 --
 fromList :: (Applicative t, Traversable t) => [a] -> Maybe (t a)
 fromList xs = sequenceA $ evalStack (sequenceA $ pure pop) xs
-
--- | Returns the head of a non-empty list or 'Nothing' for the empty list.
---
--- >>> safeHead "Haskell"
--- Just 'H'
---
--- >>> safeHead ""
--- Nothing
---
-safeHead :: [a] -> Maybe a
-safeHead = (runIdentity <$>) . fromList

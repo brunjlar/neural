@@ -30,10 +30,13 @@ module Data.Utils.List
     , editList
     , pairs
     , indexOf
+    , safeHead
     ) where
 
 import qualified Control.Monad.Identity as I
 import qualified Control.Monad.State    as S
+import           Data.MyPrelude         (runIdentity)
+import           Data.Utils.Traversable (fromList)
 
 -- | Splits off the last element of a non-empty list.
 --
@@ -171,3 +174,14 @@ indexOf [] _ = Nothing
 indexOf (x : xs) y
     | x == y    = Just 0
     | otherwise = succ <$> indexOf xs y
+
+-- | Returns the head of a non-empty list or 'Nothing' for the empty list.
+--
+-- >>> safeHead "Haskell"
+-- Just 'H'
+--
+-- >>> safeHead ""
+-- Nothing
+--
+safeHead :: [a] -> Maybe a
+safeHead = (runIdentity <$>) . fromList
