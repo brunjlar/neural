@@ -9,7 +9,11 @@ packages:
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
+    - friday-0.2.2.0
+    - friday-juicypixels-0.1.1
     - natural-transformation-0.3.1
+    - pipes-zlib-0.4.4
+    - ratio-int-0.1.2
 
 # Override default flag values for local packages and extra-deps
 flags: {}
