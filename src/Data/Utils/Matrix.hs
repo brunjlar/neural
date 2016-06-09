@@ -27,6 +27,7 @@ module Data.Utils.Matrix
     , column
     , mgenerate
     , (!!?)
+    , (!!!)
     , transpose
     ) where
 
@@ -105,6 +106,23 @@ mgenerate f = Matrix $ generate (\i -> generate (\j -> f (i, j)))
 --
 (!!?) :: Matrix m n a -> (Int, Int) -> Maybe a
 m !!? (i, j) = row m i >>= (!? j)
+
+-- | Gives the matrix element with the specified index (row, column) if the index is valid,
+--   otherwise throws an exception.
+--
+-- >>> :set -XDataKinds
+-- >>> let m = mgenerate (uncurry (+)) :: Matrix 2 3 Int
+-- >>> m !!! (0,0)
+-- 0
+--
+-- >>> m !!! (1, 2) 
+-- 3
+--
+-- >>> m !!! (5, 7)
+-- *** Exception: Data.Utils.Matrix.!!!: invalid index
+--
+(!!!) :: Matrix m n a -> (Int, Int) -> a
+m !!! (i, j) = fromMaybe (error "Data.Utils.Matrix.!!!: invalid index") (m !!? (i, j))
 
 -- | Transposes a matrix.
 --

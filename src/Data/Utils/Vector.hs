@@ -129,7 +129,7 @@ Vector v !? i = v V.!? i
 -- *** Exception: Data.Utils.Vector.!: invalid index 
 --
 (!) :: Vector n a -> Int -> a
-v ! i = fromMaybe (error "Data.Utils.Vector.!: invalid index")   (v !? i)
+v ! i = fromMaybe (error "Data.Utils.Vector.!: invalid index") (v !? i)
 
 -- | Gets the first element of a vector of length greater than zero.
 --
