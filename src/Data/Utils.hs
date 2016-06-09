@@ -16,6 +16,7 @@ module Data.Utils
     ( module Data.Utils.Analytic
     , module Data.Utils.Arrow
     , module Data.Utils.Matrix
+    , module Data.Utils.Pipes
     , module Data.Utils.Random
     , module Data.Utils.Stack
     , module Data.Utils.Statistics
@@ -26,6 +27,7 @@ module Data.Utils
 import Data.Utils.Analytic
 import Data.Utils.Arrow
 import Data.Utils.Matrix
+import Data.Utils.Pipes
 import Data.Utils.Random
 import Data.Utils.Stack
 import Data.Utils.Statistics

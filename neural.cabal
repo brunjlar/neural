@@ -58,6 +58,7 @@ library
                      , Data.Utils.Arrow
                      , Data.Utils.List
                      , Data.Utils.Matrix
+                     , Data.Utils.Pipes
                      , Data.Utils.Random
                      , Data.Utils.Stack
                      , Data.Utils.Statistics
@@ -73,6 +74,7 @@ library
                      , filepath
                      , ghc-typelits-natnormalise
                      , hspec
+                     , kan-extensions
                      , lens
                      , MonadRandom
                      , mtl

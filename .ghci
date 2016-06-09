@@ -1,1 +1,1 @@
-:set -XDataKinds
+:set -XDataKinds +m +s +t
