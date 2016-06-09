@@ -24,6 +24,8 @@ module Numeric.Neural.Normalization
     , crossEntropyError
     , white
     , whiten
+    , Classifier
+    , mkStdClassifier
     ) where
 
 import Control.Arrow
@@ -35,6 +37,7 @@ import Data.Utils.Analytic
 import Data.Utils.Statistics
 import Data.Utils.Traversable
 import Data.Utils.Vector
+import Numeric.Neural.Layer
 import Numeric.Neural.Model
 
 -- | Provides "1 of @n@" encoding for enumerable types.
@@ -167,3 +170,16 @@ whiten (Model c e i o) xss = Model c' e i o where
     c' = white xss' ^>> c
 
     xss' = (fmap fromDouble . i) <$> xss
+
+-- | A @'Classifier' f n b c@ is a 'Model' that classifies items of type @b@ into categories of type @c@,
+--   using a component with input shape @f@ and output shape @'Vector' n@.
+--
+type Classifier f n b c = StdModel f (Vector n) b c
+
+-- | Makes a standard 'Classifier' which uses a softmax layer, "1 of n" encoding and the cross entropy error.
+--
+mkStdClassifier :: (Functor f, KnownNat n, Enum c)
+                   => Component (f Analytic) (Vector n Analytic) -- ^ the embedded component
+                   -> (b -> f Double)                            -- ^ converts input
+                   -> Classifier f n b c
+mkStdClassifier c i = mkStdModel (c >>^ softmax) crossEntropyError i decode1ofN where

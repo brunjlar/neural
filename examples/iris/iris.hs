@@ -73,9 +73,7 @@ readSamples = do
 
     f l = let Right x = parseOnly sampleParser l in x
 
-irisModel :: StdModel (Vector 4) (Vector 3) Attributes Iris
-irisModel = mkStdModel
-    ((tanhLayer :: Layer 4 2) >>> tanhLayer >>^ softmax)
-    crossEntropyError
+irisModel :: Classifier (Vector 4) 3 Attributes Iris
+irisModel = mkStdClassifier
+    ((tanhLayer :: Layer 4 2) >>> tanhLayer)
     (\(Attributes sl sw pl pw) -> cons sl (cons sw (cons pl (cons pw nil)))) 
-    decode1ofN
