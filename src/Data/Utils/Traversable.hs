@@ -21,6 +21,7 @@ import Data.Utils.Stack
 -- | Tries to create a traversable (which must also be applicative) from a list.
 --   If the list contains too few elements, 'Nothing' is returned,
 --
+-- >>> import Data.MyPrelude
 -- >>> fromList [1, 2, 3] :: Maybe (Identity Int)
 -- Just (Identity 1)
 --
