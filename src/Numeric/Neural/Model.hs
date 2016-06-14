@@ -46,7 +46,6 @@ import Control.Arrow
 import Control.Category
 import Control.Monad.Par            (runPar)
 import Control.Monad.Par.Combinator (parMapReduceRange, InclusiveRange(..))
-import qualified Data.Array as A
 import Data.Profunctor
 import Data.MyPrelude
 import Prelude                      hiding (id, (.))
@@ -252,13 +251,12 @@ descent (Model c e i o) eta xs = case c of
             l                         = length xs'
             l'                        = fromIntegral l
             scale                     = eta / l'
-            xs''                      = A.listArray (1, l) xs'
             q j                       = do
-                                            let x          = xs'' A.! j 
+                                            let x          = xs' !! j --xs'' A.! j 
                                                 (err', g') = gradient (\_ dw -> scale * dw) (errFun e x f) ws
                                             return (err' / l', g')
             s (err', g') (err'', g'') = return (err' + err'', (+) <$> g' <*> g'')
-            (err, ws')                = runPar $ parMapReduceRange (InclusiveRange 1 l) q s (0, pure 0)
+            (err, ws')                = runPar $ parMapReduceRange (InclusiveRange 0 $ pred l) q s (0, pure 0)
             ws''                      = (-) <$> ws <*> ws'
             c'                        = Component ws'' f r
             m                         = Model c' e i o
