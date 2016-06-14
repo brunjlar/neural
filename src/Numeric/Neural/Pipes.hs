@@ -1,5 +1,7 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
+{-# LANGUAGE BangPatterns #-}
+
 {-|
 Module      : Numeric.Neural.Pipes
 Description : a pipes API for models
@@ -48,9 +50,9 @@ descentP m i f = loop m i where
 
     loop m' i' = do
         xs <- await
-        let eta = f i'
+        let !eta = f i'
         let (e, m'') = descent m' eta xs
-        yield TS
+        m'' `deepseq` yield TS
             { tsModel      = m''
             , tsGeneration = i'
             , tsEta        = eta

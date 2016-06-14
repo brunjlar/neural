@@ -79,6 +79,10 @@ instance (KnownNat n, Read a) => Read (Vector n a) where
                         n'  = fromIntegral (natVal (Proxy :: Proxy n))
                     in  [(Vector ys, t) | (ys, t) <- xs, length ys == n']    
 
+instance (NFData a) => NFData (Vector n a) where
+
+    rnf (Vector v) = rnf v
+
 -- | The /scalar product/ of two vectors of the same length.
 --
 -- >>> :set -XDataKinds
@@ -86,7 +90,7 @@ instance (KnownNat n, Read a) => Read (Vector n a) where
 -- 11
 --
 (<%>) :: Num a => Vector n a -> Vector n a -> a
-xs <%> ys = sum $ zipWith (*) (toList xs) (toList ys)
+Vector v <%> Vector w = V.sum $ V.zipWith (*) v w
 
 -- | The vector of length zero.
 nil :: Vector 0 a

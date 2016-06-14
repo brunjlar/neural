@@ -3,6 +3,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE BangPatterns #-}
 
 {-|
 Module      : Numeric.Neural.Normalization
@@ -155,8 +156,8 @@ white xss = ((w <$> sequenceA xss) <*>) where
 
     w xs = case toList xs of
         []  -> id
-        xs' -> let (_, m, v) = countMeanVar xs'
-                   s         = if v == 0 then 1 else 1 / sqrt v
+        xs' -> let (_, !m, !v) = countMeanVar xs'
+                   !s          = if v == 0 then 1 else 1 / sqrt v
                in  \x -> (x - m) * s
 
 -- | Modifies a 'Model' by whitening the input before feeding it into the embedded component.
@@ -182,4 +183,4 @@ mkStdClassifier :: (Functor f, KnownNat n, Enum c)
                    => Component (f Analytic) (Vector n Analytic) -- ^ the embedded component
                    -> (b -> f Double)                            -- ^ converts input
                    -> Classifier f n b c
-mkStdClassifier c i = mkStdModel (c >>^ softmax) crossEntropyError i decode1ofN where
+mkStdClassifier c i = mkStdModel (c >>^ softmax) crossEntropyError i decode1ofN

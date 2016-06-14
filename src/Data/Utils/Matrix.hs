@@ -7,6 +7,7 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 {-|
 Module      : Data.Utils.Matrix
@@ -38,7 +39,7 @@ import Data.Utils.Vector
 -- | @'Matrix' m n a@ is the type of /matrices/ with @m@ rows, @n@ columns and entries of type @a@.
 --
 newtype Matrix (m :: Nat) (n :: Nat) a = Matrix (Vector m (Vector n a)) 
-    deriving (Eq, Show, Functor, Foldable, Traversable)
+    deriving (Eq, Show, Functor, Foldable, Traversable, NFData)
 
 instance (KnownNat m, KnownNat n) => Applicative (Matrix m n) where
 

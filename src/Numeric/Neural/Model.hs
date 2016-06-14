@@ -8,6 +8,7 @@
 {-# LANGUAGE Arrows #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 {-|
 Module      : Neural.Model
@@ -40,6 +41,7 @@ module Numeric.Neural.Model
     , mkStdModel
     ) where
 
+import Control.Applicative    
 import Control.Arrow
 import Control.Category
 import Data.Profunctor
@@ -88,7 +90,7 @@ instance Profunctor (ParamFun t) where dimap  = dimapArr
 --   In contrast to 'ParamFun', when components are composed, parameters are not shared. 
 --   Each component carries its own collection of parameters instead.
 --
-data Component a b = forall t. (Traversable t, Applicative t) => Component
+data Component a b = forall t. (Traversable t, Applicative t, NFData (t Double)) => Component
     { weights :: t Double                                -- ^ the specific parameter values
     , compute :: ParamFun t a b                          -- ^ the encapsulated parameterized function
     , initR   :: forall m. MonadRandom m => m (t Double) -- ^ randomly sets the parameters
@@ -115,7 +117,15 @@ instance Applicative Empty where
 
     Empty <*> Empty = Empty
 
+instance NFData (Empty a) where
+
+    rnf Empty = ()
+
 data Pair s t a = Pair (s a) (t a) deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
+
+instance (NFData (s a), NFData (t a)) => NFData (Pair s t a) where
+
+    rnf (Pair xs ys) = rnf xs `seq` rnf ys `seq` ()
 
 instance (Applicative s, Applicative t) => Applicative (Pair s t) where
 
@@ -161,6 +171,10 @@ instance Applicative (Component a) where pure = pureArr; (<*>) = apArr
 
 instance Profunctor Component where dimap = dimapArr
 
+instance NFData (Component a b) where
+
+    rnf (Component ws _ _) = rnf ws
+
 -- | A @'Model' f g a b c@ wraps a @'Component' (f 'Analytic') (g 'Analytic')@
 --   and models functions @b -> c@ with "samples" (for model error determination)
 --   of type @a@.
@@ -177,6 +191,10 @@ data Model :: (* -> *) -> (* -> *) -> * -> * -> * -> * where
 instance Profunctor (Model f g a) where
 
     dimap m n (Model c e i o) = Model c e (i . m) (n . o)
+
+instance NFData (Model f g a b c) where
+
+    rnf (Model c _ _ _) = rnf c
 
 -- | A 'Lens' for accessing the component embedded in a model.
 --
@@ -195,28 +213,29 @@ modelR (Model c e i o) = case c of
         ws <- r
         return $ Model (Component ws f r) e i o
 
-errFun :: (Functor f, Foldable h, Traversable t)
+errFun :: (Functor f, Traversable t)
           => (a -> (f Double, g Analytic -> Analytic))
-          -> h a
+          -> a
           -> ParamFun t (f Analytic) (g Analytic)
           -> (t Analytic -> Analytic)
-errFun e xs f = runPF f' xs where
+errFun e x f = runPF f' x where
 
-    f' = toList ^>> convolve f'' >>^ mean
-
-    f'' = proc x -> do
-        let (x', h) = e x
+    f' = proc z -> do
+        let (x', h) = e z
             x''     = fromDouble <$> x'
         y <- f -< x''
         returnA -< h y
 
+modelError' :: Model f g a b c -> a -> Double
+modelError' (Model c e _ _) x = case c of
+    Component ws f _ -> let f'  = errFun e x f
+                            f'' = fromJust . fromAnalytic . f' . fmap fromDouble
+                        in  f'' ws
+
 -- | Calculates the avarage model error for a "mini-batch" of samples.
 --
 modelError :: Foldable h => Model f g a b c -> h a -> Double
-modelError (Model c e _ _) xs = case c of
-    Component ws f _ -> let f'  = errFun e xs f
-                            f'' = fromJust . fromAnalytic . f' . fmap fromDouble
-                        in  f'' ws
+modelError m xs = mean $ modelError' m <$> toList xs
 
 -- | Performs one step of gradient descent/ backpropagation on the model,
 descent :: (Foldable h)
@@ -226,10 +245,13 @@ descent :: (Foldable h)
            -> (Double, Model f g a b c) -- ^ returns the average sample error and the improved model
 descent (Model c e i o) eta xs = case c of
     Component ws f r ->
-        let f' = errFun e xs f
-            (err, ws') = gradient (\w dw -> w - eta * dw) f' ws
-            c'         = Component ws' f r
-            m          = Model c' e i o
+        let f' x = gradient (\_ dw -> dw) (errFun e x f) ws
+            ys   = f' <$> toList xs 
+            err = mean $ fst <$> ys
+            grad = (* eta) . mean . getZipList <$> sequenceA (ZipList (snd <$> ys))
+            ws'  = (-) <$> ws <*> grad
+            c'   = Component ws' f r
+            m    = Model c' e i o
         in  (err, m)
 
 -- | A type abbreviation for the most common type of models, where samples are just input-output tuples.

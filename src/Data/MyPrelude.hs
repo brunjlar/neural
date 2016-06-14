@@ -13,12 +13,12 @@ This module simply reexports a selection of commonly used standard types and fun
 -}
 
 module Data.MyPrelude
-    ( NFData(..)
+    ( NFData(..), deepseq, force
     , (&), (^.), (.~), Lens', Getter, to, lens
     , when, unless, forM, forM_, void, replicateM, forever, guard
     , Identity(..)
     , MonadIO(..)
-    , MonadRandom, getRandom, getRandomR, RandT, runRandT, evalRandT, StdGen, mkStdGen
+    , MonadRandom, getRandom, getRandomR, Rand, RandT, runRand, evalRand, runRandT, evalRandT, StdGen, mkStdGen
     , MonadState(..)
     , lift
     , State, StateT, modify, runState, evalState, execState, runStateT, evalStateT, execStateT
@@ -36,12 +36,12 @@ module Data.MyPrelude
     , printf
     ) where
 
-import Control.DeepSeq            (NFData(..))
+import Control.DeepSeq            (NFData(..), deepseq, force)
 import Control.Lens               ((&), (^.), (.~), Lens', Getter, to, lens)
 import Control.Monad              (when, unless, forM, forM_, void, replicateM, forever, guard)
 import Control.Monad.Identity     (Identity(..))
 import Control.Monad.IO.Class     (MonadIO(..))
-import Control.Monad.Random       (MonadRandom, getRandom, getRandomR, RandT, runRandT, evalRandT, StdGen, mkStdGen)
+import Control.Monad.Random       (MonadRandom, getRandom, getRandomR, Rand, RandT, runRand, evalRand, runRandT, evalRandT, StdGen, mkStdGen)
 import Control.Monad.State.Class  (MonadState(..))
 import Control.Monad.Trans.Class  (lift)
 import Control.Monad.Trans.State  (State, StateT, modify, runState, evalState, execState, runStateT, evalStateT, execStateT)
