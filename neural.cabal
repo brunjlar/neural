@@ -78,6 +78,8 @@ library
                      , kan-extensions
                      , lens
                      , MonadRandom
+                     , monad-par
+                     , monad-par-extras
                      , mtl
                      , parallel
                      , pipes

@@ -44,12 +44,15 @@ module Numeric.Neural.Model
 import Control.Applicative    
 import Control.Arrow
 import Control.Category
+import Control.Monad.Par            (runPar)
+import Control.Monad.Par.Combinator (parMapReduceRange, InclusiveRange(..))
+import qualified Data.Array as A
 import Data.Profunctor
 import Data.MyPrelude
-import Prelude                hiding (id, (.))
+import Prelude                      hiding (id, (.))
 import Data.Utils.Analytic
 import Data.Utils.Arrow
-import Data.Utils.Statistics  (mean)
+import Data.Utils.Statistics        (mean)
 import Data.Utils.Traversable
 
 -- | The type @'ParamFun' t a b@ describes parameterized functions from @a@ to @b@, where the
@@ -245,13 +248,20 @@ descent :: (Foldable h)
            -> (Double, Model f g a b c) -- ^ returns the average sample error and the improved model
 descent (Model c e i o) eta xs = case c of
     Component ws f r ->
-        let f' x = gradient (\_ dw -> dw) (errFun e x f) ws
-            ys   = f' <$> toList xs 
-            err = mean $ fst <$> ys
-            grad = (* eta) . mean . getZipList <$> sequenceA (ZipList (snd <$> ys))
-            ws'  = (-) <$> ws <*> grad
-            c'   = Component ws' f r
-            m    = Model c' e i o
+        let xs'                       = toList xs
+            l                         = length xs'
+            l'                        = fromIntegral l
+            scale                     = eta / l'
+            xs''                      = A.listArray (1, l) xs'
+            q j                       = do
+                                            let x          = xs'' A.! j 
+                                                (err', g') = gradient (\_ dw -> scale * dw) (errFun e x f) ws
+                                            return (err' / l', g')
+            s (err', g') (err'', g'') = return (err' + err'', (+) <$> g' <*> g'')
+            (err, ws')                = runPar $ parMapReduceRange (InclusiveRange 1 l) q s (0, pure 0)
+            ws''                      = (-) <$> ws <*> ws'
+            c'                        = Component ws'' f r
+            m                         = Model c' e i o
         in  (err, m)
 
 -- | A type abbreviation for the most common type of models, where samples are just input-output tuples.
