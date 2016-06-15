@@ -27,6 +27,10 @@ In order to provide a powerful and flexible API, models are constructed using *c
 [Arrow and ArrowChoice](https://hackage.haskell.org/package/base-4.9.0.0/docs/Control-Arrow.html) typeclasses. 
 They can therefore easily be combined and transformed.
 
+Once a model has been constructed, it can be hooked up into a customized training algorithm using [pipes](https://hackage.haskell.org/package/pipes pipes),
+so that various aspects of the algorithm (loading data, choosing random samples, reporting intermediate results, stop criterium etc.) can be defined in a modular,
+decoupled way.
+
 Even though neural networks are the primary motivation for this project, any other kind of model can be
 defined in the same framework, whenever the model depends on a collection of numerical parameters in a differentiable
 way. - One simple example for this would be [linear regression](https://en.wikipedia.org/wiki/Linear_regression).
