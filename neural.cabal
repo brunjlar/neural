@@ -23,7 +23,7 @@ description:
     <https://en.wikipedia.org/wiki/Iris_flower_data_set Iris flower> problem.
   .
   * A first (still simple) neural network for recognizing handwritten digits from the equally famous
-    <https://en.wikipedia.org/wiki/MNIST_database> database.
+    <https://en.wikipedia.org/wiki/MNIST_database MNIST> database.
   .
   The library is still very much experimental at this point.
 
