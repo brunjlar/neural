@@ -2,11 +2,12 @@
 
 module Main where
 
-import Control.Arrow        hiding (loop)
+import Control.Category      
 import Control.Monad.Random
 import Data.MyPrelude
-import Numeric.Neural
 import Data.Utils
+import Numeric.Neural
+import Prelude              hiding (id, (.))
 
 main :: IO ()
 main = do
@@ -30,8 +31,8 @@ main = do
 
     sqrtModel :: StdModel (Vector 1) (Vector 1) Double Double
     sqrtModel = mkStdModel
-        ((tanhLayer :: Layer 1 2) >>> linearLayer)
-        (sqDiff . pure . fromDouble)
+        (linearLayer . (tanhLayer :: Layer 1 2))
+        (\x -> Diff $ Identity . sqDiff (pure $ fromDouble x))
         pure 
         vhead
 

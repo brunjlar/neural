@@ -3,12 +3,13 @@
 
 module Main where
 
-import Control.Arrow  hiding (loop)
+import Control.Category
 import Criterion.Main
 import Data.MyPrelude
 import Data.Utils
 import Data.Void
 import Numeric.Neural
+import Prelude           hiding (id, (.))
 
 main :: IO ()
 main = defaultMain 
@@ -47,7 +48,7 @@ w sampleCount testCount = flip evalRand (mkStdGen 123456) $ do
     mkSample = mapM $ uncurry boxMuller'
 
     model' :: Model (Vector Width) Identity Void (Vector Width Double) Double
-    model' = Model (arr $ Identity . sum) absurd id runIdentity
+    model' = Model (cArr $ Diff $ Identity . sum) absurd id runIdentity
 
 type Width = 10
 
@@ -68,7 +69,8 @@ l m xss batchSize steps = bench (printf "%d/%d" batchSize steps) $ whnf l' steps
 
 setupEnv :: IO (M, [Vector Width' Double])
 setupEnv = return $ flip evalRand (mkStdGen 987654) $ do
-    m   <- modelR $ mkStdModel linearLayer (sqDiff . (fromDouble <$>)) id id
+    let e xs = Diff $ Identity . sqDiff (fromDouble <$> xs)
+    m   <- modelR $ mkStdModel linearLayer e id id
     xss <- replicateM 100 $ let r = getRandomR (-5, 5) in sequence $ pure r
     return (m, xss)
 

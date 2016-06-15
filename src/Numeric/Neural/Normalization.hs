@@ -29,7 +29,8 @@ module Numeric.Neural.Normalization
     , mkStdClassifier
     ) where
 
-import Control.Arrow
+import Control.Arrow          (first)
+import Control.Category
 import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Witnesses
@@ -40,6 +41,7 @@ import Data.Utils.Traversable
 import Data.Utils.Vector
 import Numeric.Neural.Layer
 import Numeric.Neural.Model
+import Prelude                hiding (id, (.))
 
 -- | Provides "1 of @n@" encoding for enumerable types.
 --
@@ -133,24 +135,24 @@ decodeEquiDist y = let xs  = polyhedron' (Proxy :: Proxy n)
 
 -- | Computes the cross entropy error (assuming "1 of n" encoding).
 --
--- >>> crossEntropyError LT (cons 0.8 (cons 0.1 (cons 0.1 nil))) :: Float
--- 0.22314353
+-- >>> runDiff (crossEntropyError LT) (cons 0.8 (cons 0.1 (cons 0.1 nil))) :: Identity Double
+-- Identity 0.2231435513142097
 --
--- >>> crossEntropyError EQ (cons 0.8 (cons 0.1 (cons 0.1 nil))) :: Float
--- 2.3025851 
+-- >>> runDiff (crossEntropyError EQ) (cons 0.8 (cons 0.1 (cons 0.1 nil))) :: Identity Double
+-- Identity 2.3025850929940455
 --
-crossEntropyError :: (Enum a, Floating b, KnownNat n) => a -> Vector n b -> b
-crossEntropyError a ys = negate $ log $ encode1ofN a <%> ys
+crossEntropyError :: (Enum a, KnownNat n) => a -> Diff (Vector n) Identity
+crossEntropyError a = Diff $ \ys -> Identity $ negate $ log $ encode1ofN a <%> ys
 
 -- | Function 'white' takes a batch of values (of a specific shape)
 --   and computes a normalization function which whitens values of that shape,
 --   so that each component has zero mean and unit variance.
 --
 -- >>> :set -XDataKinds
--- >>> let xss = [cons 1 (cons 1 nil), cons 1 (cons 2 nil), cons 1 (cons 3 nil)] :: [Vector 2 Float]
+-- >>> let xss = [cons 1 (cons 1 nil), cons 1 (cons 2 nil), cons 1 (cons 3 nil)] :: [Vector 2 Double]
 -- >>> let f   = white xss
 -- >>> f <$> xss
--- [[0.0,-1.224745],[0.0,0.0],[0.0,1.224745]]
+-- [[0.0,-1.2247448713915887],[0.0,0.0],[0.0,1.2247448713915887]]
 white :: (Applicative f, Traversable t, Eq a, Floating a) => t (f a) -> f a -> f a
 white xss = ((w <$> sequenceA xss) <*>) where
 
@@ -166,11 +168,13 @@ whiten :: (Applicative f, Traversable t)
           => Model f g a b c             -- ^ original model 
           -> t b                         -- ^ batch of input data
           -> Model f g a b c             
-whiten (Model c e i o) xss = Model c' e i o where
+whiten (Model c e i o) xss = Model c e' i' o where
 
-    c' = white xss' ^>> c
+    w = white $ i <$> xss
 
-    xss' = (fmap fromDouble . i) <$> xss
+    i' = w . i
+
+    e' = first w . e
 
 -- | A @'Classifier' f n b c@ is a 'Model' that classifies items of type @b@ into categories of type @c@,
 --   using a component with input shape @f@ and output shape @'Vector' n@.
@@ -180,7 +184,7 @@ type Classifier f n b c = StdModel f (Vector n) b c
 -- | Makes a standard 'Classifier' which uses a softmax layer, "1 of n" encoding and the cross entropy error.
 --
 mkStdClassifier :: (Functor f, KnownNat n, Enum c)
-                   => Component (f Analytic) (Vector n Analytic) -- ^ the embedded component
-                   -> (b -> f Double)                            -- ^ converts input
+                   => Component f (Vector n) -- ^ the embedded component
+                   -> (b -> f Double)        -- ^ converts input
                    -> Classifier f n b c
-mkStdClassifier c i = mkStdModel (c >>^ softmax) crossEntropyError i decode1ofN
+mkStdClassifier c i = mkStdModel (cArr (Diff softmax) . c) crossEntropyError i decode1ofN

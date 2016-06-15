@@ -1,6 +1,8 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 {-|
 Module      : Data.Utils.Analytic
@@ -11,48 +13,65 @@ Maintainer  : brunjlar@gmail.com
 Stability   : experimental
 Portability : portable
 
-This module defines the numeric type 'Analytic', which has "built in differentiation".
+This module defines the numeric class 'Analytic', "differentiable" functions @'Diff' f g@ 
+and an adapted version of 'Numeric.AD.gradWith''.
 -}
 
 module Data.Utils.Analytic
-    ( Analytic
-    , fromDouble
-    , fromAnalytic
-    , gradient
+    ( Analytic(..)
+    , Diff(..)
+    , Diff'
+    , diff
+    , gradWith'
     ) where
 
-import qualified Numeric.AD.Rank1.Kahn    as K
-import qualified Numeric.AD.Internal.Kahn as K
+import           Control.Category
+import           Data.MyPrelude
+import           Data.Reflection             (Reifies)
+import qualified Numeric.AD                  as AD                  
+import           Numeric.AD.Internal.Reverse (Reverse, Tape)
+import Prelude                               hiding (id, (.))
 
--- | The numeric type 'Analytic' is a wrapper around Edward Kmett's @'K.Kahn' Double@ type.
---   Using functions from Analytics to Analytics, we automatically get numerically exact gradients.
---   An number of type 'Analytic' is conceptionally a 'Double' together with an infinitesimal component.
+-- | Class 'Analytic' is a helper class for defining differentiable functions.
 --
-newtype Analytic = Analytic { toKahn :: K.Kahn Double }
-    deriving (Show, Num, Eq, Floating, Fractional, Ord, Real, RealFloat, RealFrac)
+class (Floating a, Ord a) => Analytic a where
 
--- | Converts a 'Double' to an 'Analytic' without infinitesimal component.
---
-fromDouble :: Double -> Analytic
-fromDouble = Analytic . K.auto
+    fromDouble :: Double -> a
 
--- | Tries to convert an 'Analytic' to a 'Double'.
---   This conversion will work if the 'Analytic' has no infinitesimal component.
+instance Analytic Double where
+
+    fromDouble = id
+
+instance Reifies s Tape => Analytic (Reverse s Double) where
+
+    fromDouble = AD.auto
+
+-- | Type @'Diff' f g@ can be thought of as the type of "differentiable" functions @f Double -> g Double@.
+newtype Diff f g = Diff { runDiff :: forall a. Analytic a => f a -> g a }
+
+instance Category Diff where
+
+    id = Diff id
+
+    Diff f . Diff g = Diff (f . g)
+
+-- | Type @'Diff''@ can be thought of as the type of differentiable functions
+--   @Double -> Double@.
+type Diff' = forall a. Analytic a => a -> a
+
+-- | Lifts a differentiable function by pointwise application.
 --
-fromAnalytic :: Analytic -> Maybe Double
-fromAnalytic x = case toKahn x of
-    K.Kahn (K.Lift y) -> Just y
-    _                 -> Nothing
+diff :: Functor f => Diff' -> Diff f f
+diff f = Diff (fmap f)
 
 -- | Computes the gradient of an analytic function and combines it with the argument. 
 --
--- >>> gradient (\_ d -> d) (\[x, y] -> x * x + 3 * y + 7) [2, 1]
+-- >>> gradWith' (\_ d -> d) (Diff $ \[x, y] -> Identity $ x * x + 3 * y + 7) [2, 1]
 -- (14.0,[4.0,3.0])
 --
-gradient :: Traversable t 
-            => (Double -> Double -> a)  -- ^ how to combine argument and gradient
-            -> (t Analytic -> Analytic) -- ^ analytic function 
-            -> t Double                 -- ^ function argument
-            -> (Double, t a)            -- ^ function value and combination of argument and gradient
-gradient c f = K.gradWith' c f' where
-    f' = toKahn . f . fmap Analytic
+gradWith' :: Traversable t 
+             => (Double -> Double -> a) -- ^ how to combine argument and gradient
+             -> Diff t Identity         -- ^ differentiable function
+             -> t Double                -- ^ function argument
+             -> (Double, t a)           -- ^ function value and combination of argument and gradient
+gradWith' c f = AD.gradWith' c (runIdentity . runDiff f)

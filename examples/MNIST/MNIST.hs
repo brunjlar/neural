@@ -3,13 +3,14 @@
 module Main where
 
 import           Codec.Picture
-import           Control.Arrow
-import qualified Data.Array     as A
+import           Control.Category
+import qualified Data.Array       as A
 import           Data.MyPrelude
 import           Data.Utils
 import           Numeric.Neural
-import           Pipes.GZip     (decompress)
-import qualified Pipes.Prelude  as P
+import           Pipes.GZip       (decompress)
+import qualified Pipes.Prelude    as P
+import           Prelude          hiding (id, (.))
 
 main :: IO ()
 main = do
@@ -30,8 +31,8 @@ main = do
 
     report ts = liftIO $ printf "%7d %8.6f %10.8f\n" (tsGeneration ts) (tsEta ts) (tsBatchError ts)
 
-    check ys ts = --return $ if tsGeneration ts == 3 then Just () else Nothing
-        if tsGeneration ts `mod` 5 == 0
+    check ys ts =
+        if tsGeneration ts `mod` 25 == 0
             then do
                 let a = accuracy (tsModel ts) ys :: Double
                 liftIO $ printf "\naccuracy %f\n\n" a
@@ -80,9 +81,9 @@ writeImg f i = liftIO $ saveTiffImage (f <.> "tiff") (ImageY8 i)
 mnistModel :: Classifier (Matrix 28 28) 10 Img Digit
 mnistModel = mkStdClassifier c i where
 
-    c = f ^>> (tanhLayer :: Layer 784 10) >>> tanhLayer
+    c = tanhLayer . (tanhLayer :: Layer 784 10) . cArr f
 
     i img = let m = mgenerate $ \(x, y) -> fromIntegral (pixelAt img x y) in force m
 
-    f :: Matrix 28 28 Analytic -> Vector 784 Analytic
-    f m = generate $ \w -> m !!! (w `mod` 28, w `div` 28)
+    f :: Diff (Matrix 28 28) (Vector 784)
+    f = Diff $ \m -> generate $ \w -> m !!! (w `mod` 28, w `div` 28)

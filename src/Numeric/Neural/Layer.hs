@@ -3,6 +3,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes #-}
 
 {-|
 Module      : Numeric.Neural.Layer
@@ -26,7 +27,6 @@ module Numeric.Neural.Layer
     , softmax
     ) where
 
-import Control.Arrow
 import Control.Category
 import Data.Proxy
 import GHC.TypeLits
@@ -38,14 +38,14 @@ import Data.Utils.Matrix
 import Data.Utils.Random
 import Data.Utils.Vector
 
--- | A @'Layer' i o@ is a component that maps a vector of length @i@ to a vector of length @j@.
+-- | A @'Layer' i o@ is a component that maps a 'Vector' of length @i@ to a 'Vector' of length @o@.
 --
-type Layer i o = Component (Vector i Analytic) (Vector o Analytic)
+type Layer i o = Component (Vector i) (Vector o)
 
-linearLayer' :: ParamFun (Matrix o (i + 1)) (Vector i Analytic) (Vector o Analytic)
+linearLayer' :: forall i o s. Analytic s => ParamFun s (Matrix o (i + 1)) (Vector i s) (Vector o s)
 linearLayer' = ParamFun $ \xs ws -> ws <%%> cons 1 xs
 
--- | Creates a /linear/ 'Layer', i.e. a layer that multiplies the input with a weight matrix and adds a bias to get the output.
+-- | Creates a /linear/ 'Layer', i.e. a layer that multiplies the input with a weight 'Matrix' and adds a bias to get the output.
 --   
 --   Random initialization follows the recommendation from chapter 3 of the online book 
 --   <http://neuralnetworksanddeeplearning.com/ Neural Networks and Deep Learning> by Michael Nielsen.
@@ -67,20 +67,20 @@ linearLayer = withNatOp (%+) p (Proxy :: Proxy 1) Component
 
 -- | Creates a 'Layer' as a combination of a linear layer and a non-linear activation function.
 --
-layer :: (KnownNat i, KnownNat o) => (Analytic -> Analytic) -> Layer i o
-layer f = arr (fmap f) . linearLayer
+layer :: (KnownNat i, KnownNat o) => Diff' -> Layer i o
+layer f = cArr (diff f) . linearLayer
 
--- | This is simply 'layer', specialized to 'tanh'-activation. Output values are all in the interval [0,1].
+-- | This is a simple 'Layer', specialized to 'tanh'-activation. Output values are all in the interval [0,1].
 --
 tanhLayer :: (KnownNat i, KnownNat o) => Layer i o
 tanhLayer = layer tanh
 
--- | This is simply 'layer', specialized to the logistic function as activation. Output values are all in the interval [-1,1].
+-- | This is a simple 'Layer', specialized to the logistic function as activation. Output values are all in the interval [-1,1].
 --
 logisticLayer :: (KnownNat i, KnownNat o) => Layer i o
 logisticLayer = layer $ \x -> 1 / (1 + exp (- x))
 
--- | This is simply 'layer', specialized to the /rectified linear unit/ activation function. 
+-- | This is a simple 'Layer', specialized to the /rectified linear unit/ activation function. 
 --   Output values are all non-negative.
 --
 reLULayer :: (KnownNat i, KnownNat o) => Layer i o

@@ -36,7 +36,9 @@ import Data.Ord         (Down(..))
 
 -- | A type for representing probabilities.
 --
-newtype Probability a = Probability { fromProbability :: a } 
+newtype Probability a = Probability 
+    { fromProbability :: a -- ^ the wrapped number 
+    } 
     deriving (Show, Read, Eq, Ord, Num, NFData, Functor)
 
 -- | Smart constructor for probabilities.

@@ -23,10 +23,9 @@ Furthermore, [gradient descent/backpropagation](https://en.wikipedia.org/wiki/Ba
 This means that new and complicated activation functions and/or network architectures can be used without the need
 to first calculate derivatives by hand.
 
-In order to provide a powerful and flexible API, models are constructed using *components* which implement the
+In order to provide a powerful and flexible API, models are constructed using *components* which behave as if they implemented the
 [Arrow and ArrowChoice](https://hackage.haskell.org/package/base-4.9.0.0/docs/Control-Arrow.html) typeclasses. 
-They can therefore easily be combined and transformed, using a multitude of
-available combinators or [arrow notation](http://downloads.haskell.org/~ghc/8.0.1/docs/html/users_guide/glasgow_exts.html#arrow-notation).
+They can therefore easily be combined and transformed.
 
 Even though neural networks are the primary motivation for this project, any other kind of model can be
 defined in the same framework, whenever the model depends on a collection of numerical parameters in a differentiable
@@ -34,8 +33,10 @@ way. - One simple example for this would be [linear regression](https://en.wikip
 
 ## Examples
 
-At the moment, two examples are included:
+At the moment, three examples are included:
 
 - [sqrt](examples/sqrt) models the regression problem of approximating the square root function on the interval [0,4].
 
 - [iris](examples/iris) solves the famous [Iris Flower](https://en.wikipedia.org/wiki/Iris_flower_data_set) classification problem.
+
+- [MNIST](examples/MNIST) tackles the equally famous [MNIST](https://en.wikipedia.org/wiki/MNIST_database) problem of recognizing handwritten digits.
