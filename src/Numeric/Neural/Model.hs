@@ -9,7 +9,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ImpredicativeTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
@@ -250,7 +249,7 @@ modelR (Model c e i o) = case c of
         ws <- r
         return $ Model (Component ws f r) e i o
 
-errFun :: forall f t a g. (Functor f, Traversable t)
+errFun :: forall f t a g. Functor f
           => (a -> (f Double, Diff g Identity)) 
           -> a
           -> (forall s. Analytic s => ParamFun s t (f s) (g s))

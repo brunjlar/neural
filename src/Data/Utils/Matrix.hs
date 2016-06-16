@@ -119,9 +119,6 @@ m !!? (i, j) = row m i >>= (!? j)
 -- >>> m !!! (1, 2) 
 -- 3
 --
--- >>> m !!! (5, 7)
--- *** Exception: Data.Utils.Matrix.!!!: invalid index
---
 (!!!) :: Matrix m n a -> (Int, Int) -> a
 m !!! (i, j) = fromMaybe (error "Data.Utils.Matrix.!!!: invalid index") (m !!? (i, j))
 

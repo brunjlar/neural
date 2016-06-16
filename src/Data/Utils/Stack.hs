@@ -62,7 +62,7 @@ push x = StackT $ modify (x :)
 
 -- | Runs a computation in the @'StackT' s m@ monad.
 --
-runStackT :: Monad m => StackT s m a -> [s] -> m (a, [s])
+runStackT :: StackT s m a -> [s] -> m (a, [s])
 runStackT (StackT m) = runStateT m
 
 -- | Evaluates a computation in the @'StackT' s m@ monad.

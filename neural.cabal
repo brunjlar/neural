@@ -1,5 +1,5 @@
 name:                neural
-version:             0.2.0.0
+version:             0.2.1.0
 synopsis:            Neural Networks in native Haskell
 description:         
   The goal of `neural` is to provide a modular and flexible neural network library written in native Haskell.
@@ -167,5 +167,5 @@ source-repository head
 source-repository this
   type:     git
   location: https://github.com/brunjlar/neural.git
-  tag:      0.2.0.0
+  tag:      0.2.1.0
 

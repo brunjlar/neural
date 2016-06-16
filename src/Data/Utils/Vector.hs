@@ -1,5 +1,7 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE GADTs #-}
@@ -129,9 +131,6 @@ Vector v !? i = v V.!? i
 -- >>> cons 'x' nil ! 0
 -- 'x'
 --
--- >>> cons 'x' nil ! 1
--- *** Exception: Data.Utils.Vector.!: invalid index 
---
 (!) :: Vector n a -> Int -> a
 v ! i = fromMaybe (error "Data.Utils.Vector.!: invalid index") (v !? i)
 
@@ -180,7 +179,7 @@ v <-> w = (-) <$> v <*> w
 -- >>> sqNorm (cons 3 (cons 4 nil)) :: Int
 -- 25
 --
-sqNorm :: (Num a, KnownNat n) => Vector n a -> a
+sqNorm :: Num a => Vector n a -> a
 sqNorm v = v <%> v
 
 -- | Calculates the /squared/ euclidean distance between two vectors of the same length.
