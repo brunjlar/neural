@@ -37,7 +37,7 @@ way. - One simple example for this would be [linear regression](https://en.wikip
 
 ## Examples
 
-At the moment, three examples are included:
+At the moment, three [examples](examples) are included:
 
 - [sqrt](examples/sqrt) models the regression problem of approximating the square root function on the interval [0,4].
 

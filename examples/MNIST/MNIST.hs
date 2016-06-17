@@ -16,6 +16,7 @@ main :: IO ()
 main = flip evalRandT (mkStdGen 999999) $ do
     xs     <- getSamples [0 .. 999]
     m      <- modelR (whiten mnistModel $ fst <$> xs)
+    liftIO $ printf "generation  learning rate  batch error\n\n"
     (a, g) <- runEffect $
             cachingBatchP getSamples 60000 20 2000 100
         >-> descentP m 1 (\g -> 0.4 * 100 / (100 + fromIntegral g))
@@ -27,15 +28,17 @@ main = flip evalRandT (mkStdGen 999999) $ do
 
     getSamples xs = liftIO $ runSafeT $ P.toListM $ trainSamples >-> indicesP xs
 
-    report ts = liftIO $ printf "%7d %8.6f %10.8f\n" (tsGeneration ts) (tsEta ts) (tsBatchError ts)
+    report ts = liftIO $ do
+        let g = tsGeneration ts
+        when (g `mod` 5 == 0) $ printf "   %7d       %8.6f   %10.8f\n" g (tsEta ts) (tsBatchError ts)
 
     check ts = do
         let g = tsGeneration ts
-        if g `mod` 100 == 0
+        if g `mod` 50 == 0
             then do
                 a <- liftIO $ accuracy $ tsModel ts
                 liftIO $ printf "\naccuracy %f\n\n" a
-                return $ if a > 0.95 then Just (a, g) else Nothing
+                return $ if a > 0.9 then Just (a, g) else Nothing
             else return Nothing
 
 accuracy :: MNISTModel -> IO Double
