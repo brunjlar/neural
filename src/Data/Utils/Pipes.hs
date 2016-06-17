@@ -4,7 +4,7 @@
 
 {-|
 Module      : Data.Utils.Pipes
-Description : list utilities
+Description : pipe utilities
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
 Maintainer  : brunjlar@gmail.com
@@ -23,12 +23,14 @@ module Data.Utils.Pipes
     , runSafeT
     , ByteString
     , Word8
+    , indices
     ) where
 
 import           Control.Monad.Codensity (lowerCodensity)
 import           Data.ByteString         (ByteString, unpack)
 import           Data.MyPrelude
 import           Data.Word               (Word8)
+import           Data.Utils.List         (pairs)
 import           Pipes
 import           Pipes.ByteString        (fromHandle)
 import           Pipes.Safe
@@ -59,3 +61,25 @@ fromFile f = P.withFile f ReadMode fromHandle
 --
 toWord8 :: Monad m => Pipe ByteString Word8 m ()
 toWord8 = forever $ await >>= each . unpack
+
+-- | Passes upstream elements with the specified indices downstream.
+--   Indices will first be sorted, duplicate indices are allowed, negative indices will be ignored.
+--
+-- >>> import qualified Pipes.Prelude as P
+-- >>> P.toList (each [0 .. 10 :: Int] >-> indices [2,2,2,0,0,1,1,-3])
+-- [0,0,1,1,2,2,2]
+--
+indices :: Monad m => [Int] -> Pipe a a m ()
+indices = indices' . offsets where
+
+    offsets xs = [y - x | (x, y) <- pairs $ 0 : sort [x | x <- xs, x >= 0]]
+
+    indices' []       = return ()
+    indices' (x : xs) = do
+        y <- await
+        indices'' x y xs
+
+    indices'' 0 y []       = yield y
+    indices'' 0 y (0 : xs) = yield y >> indices'' 0 y xs
+    indices'' 0 y (n : xs) = yield y >> indices' (pred n : xs)
+    indices'' n _ xs       = indices' $ pred n : xs
