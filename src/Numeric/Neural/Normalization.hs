@@ -135,12 +135,13 @@ decodeEquiDist y = let xs  = polyhedron' (Proxy :: Proxy n)
                    in  toEnum i
 
 -- | Computes the cross entropy error (assuming "1 of n" encoding).
+--   To avoid @'log' 0@, values are first shifted into the interval [0.01, 0.99].
 --
 -- >>> runDiff (crossEntropyError LT) (cons 0.8 (cons 0.1 (cons 0.1 nil))) :: Identity Double
--- Identity 0.2231435513142097
+-- Identity 0.23067181773500128
 --
 -- >>> runDiff (crossEntropyError EQ) (cons 0.8 (cons 0.1 (cons 0.1 nil))) :: Identity Double
--- Identity 2.3025850929940455
+-- Identity 2.2256240518579173
 --
 crossEntropyError :: (Enum a, KnownNat n) => a -> Diff (Vector n) Identity
 crossEntropyError a = Diff $ \ys -> Identity $ negate $ log $ (\y -> 0.98 * y + 0.01) $ encode1ofN a <%> ys
