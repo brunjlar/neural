@@ -1,14 +1,15 @@
-{-# OPTIONS_HADDOCK show-extensions #-}
-
-#if __GLASGOW_HASKELL__ >= 800
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
-#endif
-
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
+
+{-# OPTIONS_HADDOCK show-extensions #-}
+
+#if __GLASGOW_HASKELL__ >= 800
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 
 {-|
 Module      : Data.Utils.Vector
