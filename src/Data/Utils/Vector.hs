@@ -1,6 +1,8 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
+#if __GLASGOW_HASKELL__ >= 800
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-}

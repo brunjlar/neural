@@ -45,7 +45,7 @@ category:            Machine Learning
 build-type:          Simple
 cabal-version:       >=1.10
 stability:           provisional
-tested-with:         GHC == 7.10.3
+tested-with:         GHC == 7.10.3, GHC == 8.0.1
 
 library
   hs-source-dirs:      src
