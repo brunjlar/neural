@@ -52,7 +52,7 @@ chunks n = forever $ lowerCodensity (replicateM n (lift await)) >>= yield
 
 -- | Safely produces 'ByteString's from a file.
 --
-fromFile :: (MonadSafe m, MonadIO m) => FilePath -> Producer' ByteString m ()
+fromFile :: MonadSafe m => FilePath -> Producer' ByteString m ()
 fromFile f = P.withFile f ReadMode fromHandle
 
 -- | Converts a stream of 'ByteString's into a stream of 'Word8's.
