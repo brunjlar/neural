@@ -20,12 +20,17 @@ module Numeric.Neural.Pipes
     , simpleBatchP
     , reportTSP
     , consumeTSP
+    , qualityP
+    , qualityP'
+    , classifierAccuracyP
+    , classifierAccuracyP'
     , module Pipes
     ) where
 
 import           Data.MyPrelude
 import           Numeric.Neural.Model
-import           Data.Utils.Random  (takeR)
+import           Numeric.Neural.Normalization
+import           Data.Utils.Random            (takeR)
 import           Pipes
 import qualified Pipes.Prelude as P
 
@@ -90,3 +95,46 @@ consumeTSP check = loop where
         case mx of
             Just x  -> return x
             Nothing -> loop 
+
+-- | Computes the average "quality" of a given 'Model' over a stream of pairs of input and expected output.
+--
+qualityP :: (Monad m, Fractional x)
+            => Model f g a b c     -- ^ the 'Model'
+            -> (b -> c -> c -> x)  -- ^ gives the quality for given input, expected output and actual output
+            -> Producer (b, c) m r -- ^ a 'Producer' of pairs of input and expected output
+            -> m (Maybe x)         -- ^ the average model quality or 'Nothing' if the 'Producer' was empty.
+qualityP m f p = P.fold g (0, 0 :: Int) h $ void p
+
+  where
+
+    g (!xs, !n) (b, c) = let c' = model m b
+                             x  = f b c c'
+                         in  (x + xs, succ n)
+
+    h (_, 0) = Nothing
+    h (x, n) = Just $ x / fromIntegral n
+
+-- | Pure version of 'qualityP'.
+--
+qualityP' :: Fractional x
+             => Model f g a b c    -- ^ the 'Model'
+             -> (b -> c -> c -> x) -- ^ gives the quality for given input, expected output and actual output
+             -> [(b, c)]           -- ^ list of pairs of input and expected output
+             -> Maybe x            -- ^ the average model quality or 'Nothing' if the list was empty.
+qualityP' m f xs = runIdentity $ qualityP m f $ each xs
+
+-- | Specialization of 'qualityP' to the case of 'Classifier's.
+--
+classifierAccuracyP :: (Monad m, Eq c, Fractional x)
+                       => Classifier f n b c
+                       -> Producer (b, c) m r
+                       -> m (Maybe x)
+classifierAccuracyP m = qualityP m $ \_ c c' -> if c == c' then 1 else 0
+
+-- | Pure version of 'classifierAccuracyP'.
+--
+classifierAccuracyP' :: (Eq c, Fractional x)
+                        => Classifier f n b c
+                        -> [(b, c)]
+                        -> Maybe x
+classifierAccuracyP' m xs = runIdentity $ classifierAccuracyP m $ each xs

@@ -16,8 +16,6 @@ main :: IO ()
 main = do
     xs <- runSafeT $ P.toListM (trainSamples >-> P.take 1000)
     printf "loaded %d train samples\n" (length xs)
-    ys <- runSafeT $ P.toListM (testSamples >-> P.take 500)
-    printf "loaded %d test samples\n" (length ys)
     flip evalRandT (mkStdGen 999999) $ do
         xs' <- takeR 100 $ fst <$> xs
         m <- modelR (whiten mnistModel xs')
@@ -25,24 +23,22 @@ main = do
                 simpleBatchP xs 20
             >-> descentP m 1 (const 0.1)
             >-> reportTSP 1 report
-            >-> consumeTSP (check ys)
+            >-> consumeTSP check
 
   where
 
     report ts = liftIO $ printf "%7d %8.6f %10.8f\n" (tsGeneration ts) (tsEta ts) (tsBatchError ts)
 
-    check ys ts =
-        if tsGeneration ts `mod` 25 == 0
+    check ts =
+        if tsGeneration ts `mod` 100 == 0
             then do
-                let a = accuracy (tsModel ts) ys :: Double
+                a <- liftIO $ accuracy $ tsModel ts
                 liftIO $ printf "\naccuracy %f\n\n" a
-                return Nothing
+                return $ if a > 0.99 then Just () else Nothing
             else return Nothing
 
-    correct m (img, d) = model m img == d
-
-    accuracy m ys = let c = length $ filter (correct m) ys
-                    in  fromIntegral c / fromIntegral (length ys)
+accuracy :: MNISTModel -> IO Double
+accuracy m = runSafeT $ fromJust <$> classifierAccuracyP m testSamples
 
 type Img = Image Pixel8
 
@@ -78,7 +74,9 @@ testSamples  = P.zip (images testImagesFile)  (labels testLabelsFile)
 writeImg :: MonadIO m => FilePath -> Img -> m ()
 writeImg f i = liftIO $ saveTiffImage (f <.> "tiff") (ImageY8 i)
 
-mnistModel :: Classifier (Matrix 28 28) 10 Img Digit
+type MNISTModel = Classifier (Matrix 28 28) 10 Img Digit
+
+mnistModel :: MNISTModel
 mnistModel = mkStdClassifier c i where
 
     c = tanhLayer . (tanhLayer :: Layer 784 10) . cArr f

@@ -28,20 +28,16 @@ main = do
   where
 
     report xs ts = liftIO $ 
-        printf "%10d %14.4f %12.6f %9.4f\n" (tsGeneration ts) (tsEta ts) (modelError (tsModel ts) xs) (getQuota xs ts)
+        printf "%10d %14.4f %12.6f %9.4f\n" (tsGeneration ts) (tsEta ts) (modelError (tsModel ts) xs) (accuracy xs ts)
 
     check xs ts = return $
         let g = tsGeneration ts
-            q = getQuota xs ts
+            q = accuracy xs ts
         in  if g `mod` 100 == 0 && q >= 0.99
             then Just (g, q)
             else Nothing
 
-    getQuota xs ts =
-        let ys = map (model $ tsModel ts) $ fst <$> xs :: [Iris]
-            n  = length $ filter (uncurry (==)) $ zip ys $ snd <$> xs
-            q  = fromIntegral n / fromIntegral (length xs) :: Double
-        in  q
+    accuracy xs ts = fromJust $ classifierAccuracyP' (tsModel ts) xs :: Double
 
 data Iris = Setosa | Versicolor | Virginica deriving (Show, Read, Eq, Ord, Enum)
 
@@ -73,7 +69,9 @@ readSamples = do
 
     f l = let Right x = parseOnly sampleParser l in x
 
-irisModel :: Classifier (Vector 4) 3 Attributes Iris
+type IrisModel = Classifier (Vector 4) 3 Attributes Iris
+
+irisModel :: IrisModel
 irisModel = mkStdClassifier
     ((tanhLayer :: Layer 4 2) >>> tanhLayer)
     (\(Attributes sl sw pl pw) -> cons sl (cons sw (cons pl (cons pw nil)))) 
