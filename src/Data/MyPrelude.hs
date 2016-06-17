@@ -15,7 +15,7 @@ This module simply reexports a selection of commonly used standard types and fun
 module Data.MyPrelude
     ( NFData(..), deepseq, force
     , (&), (^.), (.~), Lens', Getter, to, lens
-    , when, unless, forM, forM_, void, replicateM, forever, guard
+    , when, unless, forM, forM_, void, replicateM, replicateM_, forever, guard
     , Identity(..)
     , MonadIO(..)
     , MonadRandom, getRandom, getRandomR, Rand, RandT, runRand, evalRand, runRandT, evalRandT, StdGen, mkStdGen
@@ -38,7 +38,7 @@ module Data.MyPrelude
 
 import Control.DeepSeq            (NFData(..), deepseq, force)
 import Control.Lens               ((&), (^.), (.~), Lens', Getter, to, lens)
-import Control.Monad              (when, unless, forM, forM_, void, replicateM, forever, guard)
+import Control.Monad              (when, unless, forM, forM_, void, replicateM, replicateM_, forever, guard)
 import Control.Monad.Identity     (Identity(..))
 import Control.Monad.IO.Class     (MonadIO(..))
 import Control.Monad.Random       (MonadRandom, getRandom, getRandomR, Rand, RandT, runRand, evalRand, runRandT, evalRandT, StdGen, mkStdGen)

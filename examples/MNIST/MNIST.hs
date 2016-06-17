@@ -13,19 +13,18 @@ import qualified Pipes.Prelude    as P
 import           Prelude          hiding (id, (.))
 
 main :: IO ()
-main = do
-    xs <- runSafeT $ P.toListM (trainSamples >-> P.take 1000)
-    printf "loaded %d train samples\n" (length xs)
-    flip evalRandT (mkStdGen 999999) $ do
-        xs' <- takeR 100 $ fst <$> xs
-        m <- modelR (whiten mnistModel xs')
-        runEffect $
-                simpleBatchP xs 20
-            >-> descentP m 1 (const 0.1)
-            >-> reportTSP 1 report
-            >-> consumeTSP check
+main = flip evalRandT (mkStdGen 999999) $ do
+    xs <- getSamples [0 .. 999]
+    m <- modelR (whiten mnistModel $ fst <$> xs)
+    runEffect $
+            cachingBatchP getSamples 60000 20 2000 100
+        >-> descentP m 1 (const 0.1)
+        >-> reportTSP 1 report
+        >-> consumeTSP check
 
   where
+
+    getSamples xs = liftIO $ runSafeT $ P.toListM $ trainSamples >-> indicesP xs
 
     report ts = liftIO $ printf "%7d %8.6f %10.8f\n" (tsGeneration ts) (tsEta ts) (tsBatchError ts)
 

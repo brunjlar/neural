@@ -18,6 +18,7 @@ module Numeric.Neural.Pipes
     ( TS(..)
     , descentP
     , simpleBatchP
+    , cachingBatchP
     , reportTSP
     , consumeTSP
     , qualityP
@@ -30,6 +31,7 @@ module Numeric.Neural.Pipes
 import           Data.MyPrelude
 import           Numeric.Neural.Model
 import           Numeric.Neural.Normalization
+import           Data.Utils.Cache
 import           Data.Utils.Random            (takeR)
 import           Pipes
 import qualified Pipes.Prelude as P
@@ -68,9 +70,33 @@ descentP m i f = loop m i where
 -- | A simple 'Producer' of mini-batches.
 simpleBatchP :: MonadRandom m
                 => [a]              -- ^ all available samples
-                -> Int              -- ^ the mini-batch size
+                -> Int              -- ^ mini-batch size
                 -> Producer [a] m r
 simpleBatchP xs n = forever $ lift (takeR n xs) >>= yield
+
+-- | Function 'simpleBatchP' only works when all available samples fit into memory.
+--   If this is not the case, 'cachingBatchP' can be used instead.
+--   It takes an effectful way to get specific samples and then caches some of those samples
+--   in memory for a couple of rounds, drawing mini-batches from the cached values.
+--
+cachingBatchP :: MonadRandom m
+                 => ([Int] -> m [a]) -- ^ get samples with specified indices
+                 -> Int              -- ^ number of all available samples
+                 -> Int              -- ^ mini-batch size
+                 -> Int              -- ^ cache size
+                 -> Int              -- ^ number of cache reuses
+                 -> Producer [a] m s
+cachingBatchP f ns bs cs nr = do
+    let c = newCache f cs
+    loop c
+
+  where
+
+    loop c = do
+       xs <- lift $ takeR cs [0 .. pred ns]
+       (ys, c') <- lift $ retrieveC c xs
+       replicateM_ nr $ lift (takeR bs ys) >>= yield
+       loop c'
 
 -- | A 'Pipe' for progress reporting of model training.
 --
