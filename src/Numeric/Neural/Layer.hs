@@ -22,6 +22,7 @@ module Numeric.Neural.Layer
     , linearLayer
     , layer
     , tanhLayer
+    , tanhLayer'
     , logisticLayer
     , reLULayer
     , softmax
@@ -70,12 +71,19 @@ linearLayer = withNatOp (%+) p (Proxy :: Proxy 1) Component
 layer :: (KnownNat i, KnownNat o) => Diff' -> Layer i o
 layer f = cArr (diff f) . linearLayer
 
--- | This is a simple 'Layer', specialized to 'tanh'-activation. Output values are all in the interval [0,1].
+-- | This is a simple 'Layer', specialized to 'tanh'-activation. Output values are all in the interval [-1,1].
 --
 tanhLayer :: (KnownNat i, KnownNat o) => Layer i o
 tanhLayer = layer tanh
 
--- | This is a simple 'Layer', specialized to the logistic function as activation. Output values are all in the interval [-1,1].
+
+-- | This is a simple 'Layer', specialized to a modified 'tanh'-activation, following the suggestion from
+--   <http://yann.lecun.com/exdb/publis/pdf/lecun-98b.pdf Efficient BackProp> by LeCun et al., where
+--   output values are all in the interval [-1.7159,1.7159].
+tanhLayer' :: (KnownNat i, KnownNat o) => Layer i o
+tanhLayer' = layer $ \x -> 1.7159 * tanh (2 * x / 3)
+
+-- | This is a simple 'Layer', specialized to the logistic function as activation. Output values are all in the interval [0,1].
 --
 logisticLayer :: (KnownNat i, KnownNat o) => Layer i o
 logisticLayer = layer $ \x -> 1 / (1 + exp (- x))

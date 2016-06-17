@@ -143,7 +143,7 @@ decodeEquiDist y = let xs  = polyhedron' (Proxy :: Proxy n)
 -- Identity 2.3025850929940455
 --
 crossEntropyError :: (Enum a, KnownNat n) => a -> Diff (Vector n) Identity
-crossEntropyError a = Diff $ \ys -> Identity $ negate $ log $ encode1ofN a <%> ys
+crossEntropyError a = Diff $ \ys -> Identity $ negate $ log $ (\y -> 0.98 * y + 0.01) $ encode1ofN a <%> ys
 
 -- | Function 'white' takes a batch of values (of a specific shape)
 --   and computes a normalization function which whitens values of that shape,

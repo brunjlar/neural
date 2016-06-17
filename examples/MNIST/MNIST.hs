@@ -14,13 +14,14 @@ import           Prelude          hiding (id, (.))
 
 main :: IO ()
 main = flip evalRandT (mkStdGen 999999) $ do
-    xs <- getSamples [0 .. 999]
-    m <- modelR (whiten mnistModel $ fst <$> xs)
-    runEffect $
+    xs     <- getSamples [0 .. 999]
+    m      <- modelR (whiten mnistModel $ fst <$> xs)
+    (a, g) <- runEffect $
             cachingBatchP getSamples 60000 20 2000 100
-        >-> descentP m 1 (const 0.1)
+        >-> descentP m 1 (\g -> 0.4 * 100 / (100 + fromIntegral g))
         >-> reportTSP 1 report
         >-> consumeTSP check
+    liftIO $ printf "\nreached accuracy of %f after %d generations\n" a g
 
   where
 
@@ -28,12 +29,13 @@ main = flip evalRandT (mkStdGen 999999) $ do
 
     report ts = liftIO $ printf "%7d %8.6f %10.8f\n" (tsGeneration ts) (tsEta ts) (tsBatchError ts)
 
-    check ts =
-        if tsGeneration ts `mod` 100 == 0
+    check ts = do
+        let g = tsGeneration ts
+        if g `mod` 100 == 0
             then do
                 a <- liftIO $ accuracy $ tsModel ts
                 liftIO $ printf "\naccuracy %f\n\n" a
-                return $ if a > 0.99 then Just () else Nothing
+                return $ if a > 0.95 then Just (a, g) else Nothing
             else return Nothing
 
 accuracy :: MNISTModel -> IO Double
@@ -78,7 +80,7 @@ type MNISTModel = Classifier (Matrix 28 28) 10 Img Digit
 mnistModel :: MNISTModel
 mnistModel = mkStdClassifier c i where
 
-    c = tanhLayer . (tanhLayer :: Layer 784 10) . cArr f
+    c = tanhLayer' . (tanhLayer' :: Layer 784 30) . cArr f
 
     i img = let m = mgenerate $ \(x, y) -> fromIntegral (pixelAt img x y) in force m
 
