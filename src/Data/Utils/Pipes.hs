@@ -23,7 +23,7 @@ module Data.Utils.Pipes
     , runSafeT
     , ByteString
     , Word8
-    , indices
+    , indicesP
     ) where
 
 import           Control.Monad.Codensity (lowerCodensity)
@@ -66,20 +66,20 @@ toWord8 = forever $ await >>= each . unpack
 --   Indices will first be sorted, duplicate indices are allowed, negative indices will be ignored.
 --
 -- >>> import qualified Pipes.Prelude as P
--- >>> P.toList (each [0 .. 10 :: Int] >-> indices [2,2,2,0,0,1,1,-3])
+-- >>> P.toList (each [0 .. 10 :: Int] >-> indicesP [2,2,2,0,0,1,1,-3])
 -- [0,0,1,1,2,2,2]
 --
-indices :: Monad m => [Int] -> Pipe a a m ()
-indices = indices' . offsets where
+indicesP :: Monad m => [Int] -> Pipe a a m ()
+indicesP = indicesP' . offsets where
 
     offsets xs = [y - x | (x, y) <- pairs $ 0 : sort [x | x <- xs, x >= 0]]
 
-    indices' []       = return ()
-    indices' (x : xs) = do
+    indicesP' []       = return ()
+    indicesP' (x : xs) = do
         y <- await
-        indices'' x y xs
+        indicesP'' x y xs
 
-    indices'' 0 y []       = yield y
-    indices'' 0 y (0 : xs) = yield y >> indices'' 0 y xs
-    indices'' 0 y (n : xs) = yield y >> indices' (pred n : xs)
-    indices'' n _ xs       = indices' $ pred n : xs
+    indicesP'' 0 y []       = yield y
+    indicesP'' 0 y (0 : xs) = yield y >> indicesP'' 0 y xs
+    indicesP'' 0 y (n : xs) = yield y >> indicesP' (pred n : xs)
+    indicesP'' n _ xs       = indicesP' $ pred n : xs
