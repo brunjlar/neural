@@ -1,4 +1,5 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
+
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeOperators #-}
