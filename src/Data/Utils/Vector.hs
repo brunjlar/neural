@@ -109,7 +109,7 @@ nil = Vector V.empty
 cons :: forall a n. a -> Vector n a -> Vector (n + 1) a
 cons x (Vector xs) = withNatOp (%+) (Proxy :: Proxy n) (Proxy :: Proxy 1) $ Vector $ V.cons x xs
 
--- | Generates a vector by applying the given function to each index.
+-- | Generates a 'Vector' by applying the given function to each index.
 --
 -- >>> :set -XDataKinds
 -- >>> generate id :: Vector 3 Int

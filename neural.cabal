@@ -67,6 +67,7 @@ library
                      , Data.Utils.Statistics
                      , Data.Utils.Traversable
                      , Data.Utils.Vector
+                     , Data.Utils.Volume
   other-modules:
   ghc-options:         -Wall -fexcess-precision -optc-O3 -optc-ffast-math
   build-depends:       base >= 4.7 && < 5

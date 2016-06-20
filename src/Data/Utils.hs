@@ -23,6 +23,7 @@ module Data.Utils
     , module Data.Utils.Statistics
     , module Data.Utils.Traversable
     , module Data.Utils.Vector
+    , module Data.Utils.Volume
     ) where
 
 import Data.Utils.Analytic
@@ -35,3 +36,4 @@ import Data.Utils.Stack
 import Data.Utils.Statistics
 import Data.Utils.Traversable
 import Data.Utils.Vector
+import Data.Utils.Volume

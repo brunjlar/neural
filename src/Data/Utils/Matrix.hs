@@ -82,7 +82,7 @@ row (Matrix rows) = (rows !?)
 column :: Matrix m n a -> Int -> Maybe (Vector m a)
 column (Matrix rows) j = sequenceA $ (!? j) <$> rows
 
--- | Generates a matrix by applying the given function to each index (row, column).
+-- | Generates a 'Matrix' by applying the given function to each index (row, column).
 --
 -- >>> :set -XDataKinds
 -- >>> mgenerate id :: Matrix 3 2 (Int, Int)

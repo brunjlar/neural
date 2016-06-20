@@ -2,3 +2,5 @@
 .stack-work/
 dist/
 tags
+src/highlight.js
+src/style.css
