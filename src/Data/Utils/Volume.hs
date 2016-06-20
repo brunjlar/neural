@@ -26,6 +26,7 @@ module Data.Utils.Volume
     ( Volume(..) 
     , slice
     , vgenerate
+    , fromMatrix
     ) where
 
 import GHC.TypeLits
@@ -64,3 +65,11 @@ slice (Volume m) i = sequenceA $ (!? i) <$> m
 --
 vgenerate :: (KnownNat m, KnownNat n, KnownNat d) => ((Int, Int, Int) -> a) -> Volume m n d a
 vgenerate f = Volume $ mgenerate (\(i, j) -> generate (\k -> f (i, j, k)))
+
+-- | Converts a 'Matrix' into a 'Volume' of depth one.
+--
+-- >>> fromMatrix (pure 0) :: Volume 2 2 1 Int
+-- Volume (Matrix [[[0],[0]],[[0],[0]]])
+--
+fromMatrix :: Matrix m n a -> Volume m n 1 a
+fromMatrix = Volume . fmap pure
