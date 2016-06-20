@@ -41,11 +41,11 @@ module Data.Utils.Vector
     , natVal
     ) where
 
+import           Data.MyPrelude
 import           Data.Proxy
 import qualified Data.Vector            as V
 import           GHC.TypeLits
 import           GHC.TypeLits.Witnesses
-import           Data.MyPrelude
 
 -- | @'Vector' n a@ is the type of vectors of length @n@ with elements of type @a@.
 data Vector :: Nat -> * -> * where

@@ -32,9 +32,9 @@ module Data.Utils.Matrix
     , transpose
     ) where
 
-import GHC.TypeLits
 import Data.MyPrelude
 import Data.Utils.Vector
+import GHC.TypeLits
 
 -- | @'Matrix' m n a@ is the type of /matrices/ with @m@ rows, @n@ columns and entries of type @a@.
 --

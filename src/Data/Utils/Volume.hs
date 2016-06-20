@@ -6,8 +6,8 @@
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
 Module      : Data.Utils.Volume
@@ -27,12 +27,15 @@ module Data.Utils.Volume
     , slice
     , vgenerate
     , fromMatrix
+    , toVector
     ) where
 
-import GHC.TypeLits
 import Data.MyPrelude
+import Data.Proxy
 import Data.Utils.Matrix
 import Data.Utils.Vector
+import GHC.TypeLits
+import GHC.TypeLits.Witnesses
 
 -- | @'Volume' m n d a@ is the type of /volumes/ with @m@ rows, @n@ columns, depth @d@ and entries of type @a@.
 --
@@ -73,3 +76,24 @@ vgenerate f = Volume $ mgenerate (\(i, j) -> generate (\k -> f (i, j, k)))
 --
 fromMatrix :: Matrix m n a -> Volume m n 1 a
 fromMatrix = Volume . fmap pure
+
+-- | Converts a 'Volume' to a 'Vector'.
+--
+-- >>> :set -XDataKinds
+-- >>> toVector (vgenerate id :: Volume 1 2 3 (Int, Int, Int))
+-- [(0,0,0),(0,0,1),(0,0,2),(0,1,0),(0,1,1),(0,1,2)]
+--
+toVector :: forall m n d a. (KnownNat m, KnownNat n, KnownNat d) => Volume m n d a -> Vector (m * n * d) a
+toVector v = let pm = Proxy :: Proxy m
+                 pn = Proxy :: Proxy n
+                 pd = Proxy :: Proxy d
+                 n  = fromIntegral $ natVal pn
+                 d  = fromIntegral $ natVal pd
+                 nd = n * d
+             in  withNatOp (%*) pm pn $
+                 withNatOp (%*) (Proxy :: Proxy (m * n)) pd $
+                 generate $ \l -> let i  = l `div` nd
+                                      l' = l `mod` nd
+                                      j  = l' `div` d
+                                      k  = l' `mod` d
+                                  in  (fromJust $ slice v k) !!! (i, j) 
