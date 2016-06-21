@@ -10,7 +10,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 {-|
-Module      : Data.Utils.Matrix
+Module      : Data.FixedSize.Matrix
 Description : fixed-size matrices
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -21,19 +21,17 @@ Portability : portable
 This module defines fixed-size /matrices/ and some basic typeclass instances and operations for them.
 -}
 
-module Data.Utils.Matrix
+module Data.FixedSize.Matrix
     ( Matrix(..) 
     , (<%%>)
     , row
     , column
-    , mgenerate
-    , (!!?)
-    , (!!!)
     , transpose
     ) where
 
 import Data.MyPrelude
-import Data.Utils.Vector
+import Data.FixedSize.Class
+import Data.FixedSize.Vector
 import GHC.TypeLits
 
 -- | @'Matrix' m n a@ is the type of /matrices/ with @m@ rows, @n@ columns and entries of type @a@.
@@ -46,6 +44,16 @@ instance (KnownNat m, KnownNat n) => Applicative (Matrix m n) where
     pure x = Matrix $ pure (pure x)
 
     Matrix fs <*> Matrix xs = Matrix $ (<*>) <$> fs <*> xs
+
+instance (KnownNat m, KnownNat n) => FixedSize (Matrix m n) where
+
+    type Index (Matrix m n) = (Int, Int)
+
+    type Size (Matrix m n) = m * n
+
+    m !? (i, j) = row m i >>= (!? j)
+
+    generate f = Matrix $ generate (\i -> generate (\j -> f (i, j)))
 
 -- | Multiplication of a /matrix/ by a (column-)/vector/.
 --
@@ -66,7 +74,7 @@ Matrix rows <%%> v = (v <%>) <$> rows
 -- >>> row (pure 42 :: Matrix 2 4 Int) 2
 -- Nothing
 --
-row :: Matrix m n a -> Int -> Maybe (Vector n a)
+row :: KnownNat m => Matrix m n a -> Int -> Maybe (Vector n a)
 row (Matrix rows) = (rows !?)
 
 -- | Gives the matrix column with the specified index (starting at zero) if the index is valid,
@@ -79,48 +87,8 @@ row (Matrix rows) = (rows !?)
 -- >>> column (pure 42 :: Matrix 2 4 Int) 4
 -- Nothing
 --
-column :: Matrix m n a -> Int -> Maybe (Vector m a)
+column :: KnownNat n => Matrix m n a -> Int -> Maybe (Vector m a)
 column (Matrix rows) j = sequenceA $ (!? j) <$> rows
-
--- | Generates a 'Matrix' by applying the given function to each index (row, column).
---
--- >>> :set -XDataKinds
--- >>> mgenerate id :: Matrix 3 2 (Int, Int)
--- Matrix [[(0,0),(0,1)],[(1,0),(1,1)],[(2,0),(2,1)]]
---
-mgenerate :: (KnownNat m, KnownNat n) => ((Int, Int) -> a) -> Matrix m n a
-mgenerate f = Matrix $ generate (\i -> generate (\j -> f (i, j)))
-
--- | Gives the matrix element with the specified index (row, column) if the index is valid,
---   otherwise 'Nothing'.
---
--- >>> :set -XDataKinds
--- >>> let m = mgenerate (uncurry (+)) :: Matrix 2 3 Int
--- >>> m !!? (0,0)
--- Just 0
---
--- >>> m !!? (1, 2) 
--- Just 3
---
--- >>> m !!? (5, 7)
--- Nothing
---
-(!!?) :: Matrix m n a -> (Int, Int) -> Maybe a
-m !!? (i, j) = row m i >>= (!? j)
-
--- | Gives the matrix element with the specified index (row, column) if the index is valid,
---   otherwise throws an exception.
---
--- >>> :set -XDataKinds
--- >>> let m = mgenerate (uncurry (+)) :: Matrix 2 3 Int
--- >>> m !!! (0,0)
--- 0
---
--- >>> m !!! (1, 2) 
--- 3
---
-(!!!) :: Matrix m n a -> (Int, Int) -> a
-m !!! (i, j) = fromMaybe (error "Data.Utils.Matrix.!!!: invalid index") (m !!? (i, j))
 
 -- | Transposes a matrix.
 --
@@ -128,4 +96,4 @@ m !!! (i, j) = fromMaybe (error "Data.Utils.Matrix.!!!: invalid index") (m !!? (
 -- Matrix ["ab"]
 --
 transpose :: (KnownNat m, KnownNat n) => Matrix m n a -> Matrix n m a
-transpose m = mgenerate $ \(i, j) -> fromJust $ m !!? (j, i)
+transpose m = generate $ \(i, j) -> fromJust $ m !? (j, i)

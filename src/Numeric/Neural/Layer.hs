@@ -29,15 +29,14 @@ module Numeric.Neural.Layer
     ) where
 
 import Control.Category
+import Data.FixedSize
 import Data.Proxy
+import Data.Utils.Analytic
+import Data.Utils.Random
 import GHC.TypeLits
 import GHC.TypeLits.Witnesses
 import Numeric.Neural.Model
 import Prelude                 hiding (id, (.))
-import Data.Utils.Analytic
-import Data.Utils.Matrix
-import Data.Utils.Random
-import Data.Utils.Vector
 
 -- | A @'Layer' i o@ is a component that maps a 'Vector' of length @i@ to a 'Vector' of length @o@.
 --
@@ -54,7 +53,7 @@ linearLayer :: forall i o. (KnownNat i, KnownNat o) => Layer i o
 linearLayer = withNatOp (%+) p (Proxy :: Proxy 1) Component
     { weights = pure 0
     , compute = linearLayer'
-    , initR   = sequenceA $ mgenerate r
+    , initR   = sequenceA $ generate r
     }
 
   where

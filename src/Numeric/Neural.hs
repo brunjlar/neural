@@ -13,12 +13,14 @@ This module reexports all the neural network related modules for convenience.
 -}
 
 module Numeric.Neural
-    ( module Numeric.Neural.Layer
+    ( module Numeric.Neural.Convolution
+    , module Numeric.Neural.Layer
     , module Numeric.Neural.Model
     , module Numeric.Neural.Normalization
     , module Numeric.Neural.Pipes
     ) where
 
+import Numeric.Neural.Convolution
 import Numeric.Neural.Layer
 import Numeric.Neural.Model
 import Numeric.Neural.Normalization

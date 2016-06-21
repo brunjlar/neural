@@ -1,6 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 
-module Utils.MatrixSpec (spec) where
+module Data.FixedSize.MatrixSpec (spec) where
 
 import Test.Hspec
 import Data.Utils
@@ -13,6 +13,7 @@ spec = do
     indexSpec
     transposeSpec
     apSpec
+    generateSpec
 
 mulSpec :: Spec
 mulSpec = describe "(<%%>)" $
@@ -44,21 +45,21 @@ columnSpec = describe "column" $ do
         column m   3  `shouldBe` Nothing
 
 indexSpec :: Spec
-indexSpec = describe "(!!?)" $ do
+indexSpec = describe "(!?)" $ do
 
     it "should give the specified element of the matrix if the index is valid" $ do
-        m !!? (0, 0) `shouldBe` Just 1
-        m !!? (1, 2) `shouldBe` Just 6
+        m !? (0, 0) `shouldBe` Just 1
+        m !? (1, 2) `shouldBe` Just 6
 
     it "should return Nothing for an invalid index" $ do
-        m !!? (2, 0) `shouldBe` Nothing
-        m !!? (0, 3) `shouldBe` Nothing
+        m !? (2, 0) `shouldBe` Nothing
+        m !? (0, 3) `shouldBe` Nothing
 
 transposeSpec :: Spec
 transposeSpec = describe "transpose" $
 
     it "should transpose the matrix" $
-        transpose m `shouldBe` mgenerate (\(i, j) -> 3 * j + i + 1)
+        transpose m `shouldBe` generate (\(i, j) -> 3 * j + i + 1)
 
 apSpec :: Spec
 apSpec = describe "(<*>)" $
@@ -66,6 +67,14 @@ apSpec = describe "(<*>)" $
     it "should be component-wise application" $
         (-) <$> m <*> m `shouldBe` pure 0 
 
+generateSpec :: Spec
+generateSpec = describe "generate" $
+
+    it "should generate a matrix" $ do
+
+        let n = generate id :: Matrix 1 2 (Int, Int)
+        show n `shouldBe` "Matrix [[(0,0),(0,1)]]"
+
 m :: Matrix 2 3 Int
-m = mgenerate $ \(i, j) -> 3 * i + j + 1 -- 1 2 3
-                                         -- 4 5 6
+m = generate $ \(i, j) -> 3 * i + j + 1 -- 1 2 3
+                                        -- 4 5 6

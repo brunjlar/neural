@@ -32,6 +32,7 @@ module Numeric.Neural.Normalization
 
 import Control.Arrow          (first)
 import Control.Category
+import Data.FixedSize
 import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Witnesses
@@ -39,7 +40,6 @@ import Data.MyPrelude
 import Data.Utils.Analytic
 import Data.Utils.Statistics
 import Data.Utils.Traversable
-import Data.Utils.Vector
 import Numeric.Neural.Layer
 import Numeric.Neural.Model
 import Prelude                hiding (id, (.))

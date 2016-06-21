@@ -12,7 +12,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
-Module      : Neural.Model
+Module      : Numeric.Neural.Model
 Description : "neural" components and models
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT

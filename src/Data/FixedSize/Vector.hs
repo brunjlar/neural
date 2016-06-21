@@ -4,6 +4,8 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 {-# OPTIONS_HADDOCK show-extensions #-}
 
@@ -12,7 +14,7 @@
 #endif
 
 {-|
-Module      : Data.Utils.Vector
+Module      : Data.FixedSize.Vector
 Description : fixed-length vectors
 Copyright   : (c) Lars Brünjes, 2016
 License     : MIT
@@ -23,26 +25,27 @@ Portability : portable
 This module defines fixed-length /vectors/ and some basic typeclass instances and operations for them.
 -}
 
-module Data.Utils.Vector
+module Data.FixedSize.Vector
     ( Vector
     , (<%>)
     , nil
     , cons
-    , generate
-    , (!?)
-    , (!)
     , vhead
     , vtail
     , (<+>)
     , (<->)
     , sqNorm
     , sqDiff
+    , toVector
+    , fromVector
     , KnownNat
     , natVal
     ) where
 
+import           Data.FixedSize.Class
 import           Data.MyPrelude
 import           Data.Proxy
+import           Data.Utils.Traversable
 import qualified Data.Vector            as V
 import           GHC.TypeLits
 import           GHC.TypeLits.Witnesses
@@ -88,6 +91,16 @@ instance (NFData a) => NFData (Vector n a) where
 
     rnf (Vector v) = rnf v
 
+instance KnownNat n => FixedSize (Vector n) where
+
+    type Index (Vector n) = Int
+
+    type Size (Vector n) = n
+
+    Vector v !? i = v V.!? i
+
+    generate = Vector . V.generate (fromIntegral $ natVal (Proxy :: Proxy n))
+
 -- | The /scalar product/ of two vectors of the same length.
 --
 -- >>> :set -XDataKinds
@@ -108,34 +121,6 @@ nil = Vector V.empty
 --
 cons :: forall a n. a -> Vector n a -> Vector (n + 1) a
 cons x (Vector xs) = withNatOp (%+) (Proxy :: Proxy n) (Proxy :: Proxy 1) $ Vector $ V.cons x xs
-
--- | Generates a 'Vector' by applying the given function to each index.
---
--- >>> :set -XDataKinds
--- >>> generate id :: Vector 3 Int
--- [0,1,2]
---
-generate :: forall n a. KnownNat n => (Int -> a) -> Vector n a
-generate = Vector . V.generate (fromIntegral $ natVal (Proxy :: Proxy n))
-
--- | Gets the vector element at the specified index if the index is valid, otherwise 'Nothing'.
---
--- >>> cons 'x' nil !? 0
--- Just 'x'
---
--- >>> cons 'x' nil !? 1
--- Nothing
---
-(!?) :: Vector n a -> Int -> Maybe a
-Vector v !? i = v V.!? i
-
--- | Gets the vector element at the specified index, throws an exception if the index is invalid.
---
--- >>> cons 'x' nil ! 0
--- 'x'
---
-(!) :: Vector n a -> Int -> a
-v ! i = fromMaybe (error "Data.Utils.Vector.!: invalid index") (v !? i)
 
 -- | Gets the first element of a vector of length greater than zero.
 --
@@ -193,3 +178,13 @@ sqNorm v = v <%> v
 --
 sqDiff :: (Num a, KnownNat n) => Vector n a -> Vector n a -> a
 sqDiff v w = sqNorm (v <-> w)
+
+-- | Converts a fixed-size container to a 'Vector' of the same size.
+--
+toVector :: (FixedSize f, KnownNat (Size f)) => f a -> Vector (Size f) a
+toVector = Vector . V.fromList . toList
+
+-- | Converts a 'Vector' to an arbitrary fixed-size container of the same size.
+--
+fromVector :: FixedSize f => Vector (Size f) a -> f a
+fromVector = fromJust . fromList . toList

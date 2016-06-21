@@ -1,4 +1,4 @@
-module Utils.CacheSpec (spec) where
+module Data.Utils.CacheSpec (spec) where
 
 import Test.Hspec
 import Data.MyPrelude

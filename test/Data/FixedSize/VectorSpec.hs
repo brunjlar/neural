@@ -1,9 +1,10 @@
 {-# LANGUAGE DataKinds #-}
 
-module Utils.VectorSpec (spec) where
+module Data.FixedSize.VectorSpec (spec) where
 
-import Test.Hspec
+import Data.MyPrelude
 import Data.Utils
+import Test.Hspec
 
 spec :: Spec
 spec = do
@@ -13,6 +14,8 @@ spec = do
     vheadSpec
     vtailSpec
     apSpec
+    toVectorSpec
+    fromVectorSpec
 
 indexSpec :: Spec
 indexSpec = describe "(!?)" $ do
@@ -55,3 +58,25 @@ apSpec = describe "(<*>)" $
     it "should be component-wise application" $ do
         let v = cons 1 (cons 2 nil) :: Vector 2 Int
         (+) <$> v <*> v `shouldBe` ((* 2) <$> v)
+
+toVectorSpec :: Spec
+toVectorSpec = describe "toVector" $ do
+
+    it "should convert a matrix to a vector" $ do
+
+        let m = pure 'x' :: Matrix 3 2 Char
+            v = toVector m
+        toList v `shouldBe` "xxxxxx"
+
+    it "should convert a volume to a vector" $ do
+
+        let v = pure 'x' :: Volume 1 2 3 Char
+            w = toVector v
+        toList w `shouldBe` "xxxxxx"
+fromVectorSpec :: Spec
+fromVectorSpec = describe "fromVectorSpec" $
+
+    it "should be inverse to 'toVector'" $ do
+
+        let v = generate id :: Volume 1 2 3 (Int, Int, Int)
+        fromVector (toVector v) `shouldBe` v

@@ -50,24 +50,27 @@ tested-with:         GHC == 7.10.3, GHC == 8.0.1
 library
   hs-source-dirs:      src
   exposed-modules:     Numeric.Neural
+                     , Numeric.Neural.Convolution
                      , Numeric.Neural.Layer
                      , Numeric.Neural.Model
                      , Numeric.Neural.Normalization
                      , Numeric.Neural.Pipes
+                     , Data.FixedSize
+                     , Data.FixedSize.Class
+                     , Data.FixedSize.Matrix
+                     , Data.FixedSize.Vector
+                     , Data.FixedSize.Volume
                      , Data.MyPrelude
                      , Data.Utils
                      , Data.Utils.Analytic
                      , Data.Utils.Arrow
                      , Data.Utils.Cache
                      , Data.Utils.List
-                     , Data.Utils.Matrix
                      , Data.Utils.Pipes
                      , Data.Utils.Random
                      , Data.Utils.Stack
                      , Data.Utils.Statistics
                      , Data.Utils.Traversable
-                     , Data.Utils.Vector
-                     , Data.Utils.Volume
   other-modules:
   ghc-options:         -Wall -fexcess-precision -optc-O3 -optc-ffast-math
   build-depends:       base >= 4.7 && < 5
@@ -107,9 +110,11 @@ test-suite neural-test
                      , hspec
                      , MonadRandom
                      , neural
-  other-modules:       Utils.CacheSpec
-                     , Utils.MatrixSpec
-                     , Utils.VectorSpec
+  other-modules:       Data.Utils.CacheSpec
+                     , Data.FixedSize.ClassSpec
+                     , Data.FixedSize.MatrixSpec
+                     , Data.FixedSize.VectorSpec
+                     , Data.FixedSize.VolumeSpec
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N -fexcess-precision -optc-O3 -optc-ffast-math
   default-language:    Haskell2010
 

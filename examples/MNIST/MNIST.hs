@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Main where
 
@@ -85,7 +86,7 @@ mnistModel = mkStdClassifier c i where
 
     c = tanhLayer' . (tanhLayer' :: Layer 784 30) . cArr f
 
-    i img = let m = mgenerate $ \(x, y) -> fromIntegral (pixelAt img x y) in force m
+    i img = let m = generate $ \(x, y) -> fromIntegral (pixelAt img x y) in force m
 
     f :: Diff (Matrix 28 28) (Vector 784)
-    f = Diff $ \m -> generate $ \w -> m !!! (w `mod` 28, w `div` 28)
+    f = Diff $ \m -> generate $ \w -> m ! (w `mod` 28, w `div` 28)
