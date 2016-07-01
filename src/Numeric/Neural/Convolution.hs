@@ -20,12 +20,18 @@ module Numeric.Neural.Convolution
     , focus'
     , cover
     , cover'
+    , convolution
     ) where
 
+import Control.Category
 import Data.FixedSize
 import Data.Proxy
+import Data.Utils
 import GHC.TypeLits
 import GHC.TypeLits.Witnesses
+import Numeric.Neural.Layer
+import Numeric.Neural.Model
+import Prelude                hiding (id, (.))
 
 -- | Focuses on a specific region of a volume.
 --
@@ -55,11 +61,11 @@ focus' = focus 0
 cover :: forall m n d a s m' n'. 
          (KnownNat m, KnownNat n, KnownNat d, KnownNat s, KnownNat m', KnownNat n')
          => a              -- ^ the element to use for out-of-bound indices
-         -> Volume m n d a -- ^ the original 'Volume'
          -> Proxy s        -- ^ a proxy to the region size
          -> Int            -- ^ the stride
+         -> Volume m n d a -- ^ the original 'Volume'
          -> Matrix m' n' (Vector (s * s * d) a)
-cover x v ps stride = withNatOp (%*) ps ps $ 
+cover x ps stride v = withNatOp (%*) ps ps $ 
                       withNatOp (%*) (Proxy :: Proxy (s * s)) (Proxy :: Proxy d) $
                       generate $ toVector . volume
 
@@ -75,8 +81,24 @@ cover x v ps stride = withNatOp (%*) ps ps $
 --
 cover' :: forall m n d a s m' n'. 
          (KnownNat m, KnownNat n, KnownNat d, KnownNat s, KnownNat m', KnownNat n', Num a)
-         => Volume m n d a -- ^ the original 'Volume'
-         -> Proxy s        -- ^ a proxy to the region size 
+         => Proxy s        -- ^ a proxy to the region size 
          -> Int            -- ^ the stride
+         -> Volume m n d a -- ^ the original 'Volume'
          -> Matrix m' n' (Vector (s * s * d) a)
 cover' = cover 0
+
+-- | Convolves a 'Layer' over a 'Volume'.
+--
+convolution :: forall s m n d m' n' d'. 
+               (KnownNat s, KnownNat m, KnownNat n, KnownNat d, KnownNat m', KnownNat n') 
+               => Proxy s              -- ^ a proxy to the region size
+               -> Int                  -- ^ the stride
+               -> Layer (s * s * d) d' -- ^ the layer to convolve
+               -> Component (Volume m n d) (Volume m' n' d')
+convolution ps stride l = cArr (Diff $ toVolume . unConvolve) .
+                          cConvolve l .
+                          cArr (Diff $ Convolve . cover' ps stride)
+
+  where
+
+    _ = natVal (Proxy :: Proxy d)

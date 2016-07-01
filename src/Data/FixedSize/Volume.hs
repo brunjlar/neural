@@ -26,6 +26,7 @@ A 'Volume' is a 'Matrix' with 'Vector' entries, i.e. a three-dimensional array.
 
 module Data.FixedSize.Volume
     ( Volume(..) 
+    , toVolume
     , slice
     , fromMatrix
     ) where
@@ -40,6 +41,11 @@ import GHC.TypeLits
 --
 newtype Volume (m :: Nat) (n :: Nat) (d :: Nat) a = Volume (Matrix m n (Vector d a))
     deriving (Eq, Show, Functor, Foldable, Traversable, NFData)
+
+-- | Converts a 'Matrix' of 'Vector's to the equivalent 'Volume'.
+--
+toVolume :: Matrix m n (Vector d a) -> Volume m n d a
+toVolume = Volume
 
 instance (KnownNat m, KnownNat n, KnownNat d) => Applicative (Volume m n d) where
 

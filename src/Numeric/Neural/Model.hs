@@ -35,7 +35,6 @@ module Numeric.Neural.Model
     , Component(..)
     , _weights
     , activate
-    , _component
     , Pair(..)
     , FEither(..)
     , Convolve(..)
@@ -44,6 +43,7 @@ module Numeric.Neural.Model
     , cLeft
     , cConvolve
     , Model(..)
+    , _component
     , model
     , modelR
     , modelError
@@ -194,7 +194,7 @@ cLeft (Component ws c i) = Component
 
 -- | Composition of functors.
 --
-data Convolve f g a = Convolve (f (g a))
+newtype Convolve f g a = Convolve { unConvolve :: f (g a) }
     deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
 
 -- | The analogue of 'convolve' for 'Component's.
