@@ -81,7 +81,6 @@ library
                      , deepseq
                      , directory
                      , filepath
-                     , foldl
                      , ghc-typelits-natnormalise
                      , hspec
                      , kan-extensions
