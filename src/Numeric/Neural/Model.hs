@@ -210,7 +210,6 @@ instance NFData (Component f g) where
 
     rnf (Component ws _ _) = rnf ws
 
-
 -- | A @'Model' f g a b c@ wraps a @'Component' f g@
 --   and models functions @b -> c@ with "samples" (for model error determination)
 --   of type @a@.
