@@ -76,7 +76,7 @@ cover x ps stride v = withNatOp (%*) ps ps $
 --
 -- >>> :set -XDataKinds
 -- >>> let v = generate (\(i, j, _) -> i + j) :: Volume 4 4 1 Int
--- >>> cover' v (Proxy :: Proxy 3) 1 :: Matrix 2 2 (Vector 9 Int)
+-- >>> cover' (Proxy :: Proxy 3) 1 v :: Matrix 2 2 (Vector 9 Int)
 -- Matrix [[[0,1,2,1,2,3,2,3,4],[1,2,3,2,3,4,3,4,5]],[[1,2,3,2,3,4,3,4,5],[2,3,4,3,4,5,4,5,6]]]
 --
 cover' :: forall m n d a s m' n'. 
