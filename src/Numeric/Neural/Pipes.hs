@@ -11,7 +11,7 @@ Maintainer  : brunjlar@gmail.com
 Stability   : experimental
 Portability : portable
 
-This modules provides a "pipes"-based API for working with models.
+This module provides a "pipes"-based API for working with models.
 -}
 
 module Numeric.Neural.Pipes
@@ -120,7 +120,7 @@ consumeTSP check = loop where
         mx <- lift (check ts)
         case mx of
             Just x  -> return x
-            Nothing -> loop 
+            Nothing -> loop
 
 -- | Computes the average "quality" of a given 'Model' over a stream of pairs of input and expected output.
 --

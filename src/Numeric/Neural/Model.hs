@@ -20,11 +20,11 @@ Maintainer  : brunjlar@gmail.com
 Stability   : experimental
 Portability : portable
 
-This module defines /parameterized functions/, /components/ and /models/. 
+This module defines /parameterized functions/, /components/ and /models/.
 The parameterized functions are instances of the 'Arrow' and 'ArrowChoice' typeclasses, whereas
-'Component's behave like 'Arrow's with choice over a different base category 
+'Component's behave like 'Arrow's with choice over a different base category
 (the category 'Diff' of differentiable functions).
-Both parameterized functions and components can be combined easily and flexibly. 
+Both parameterized functions and components can be combined easily and flexibly.
 
 /Models/ contain a component, can measure their error with regard to samples and can be trained by gradient descent/
 backpropagation.
@@ -52,7 +52,7 @@ module Numeric.Neural.Model
     , mkStdModel
     ) where
 
-import Control.Applicative    
+import Control.Applicative
 import Control.Arrow
 import Control.Category
 import Control.Monad.Par            (runPar)
@@ -65,7 +65,7 @@ import Data.Utils.Arrow
 import Data.Utils.Statistics        (mean)
 import Data.Utils.Traversable
 
--- | The type @'ParamFun' t a b@ describes parameterized functions from @a@ to @b@, where the
+-- | The type @'ParamFun' s t a b@ describes parameterized functions from @a@ to @b@, where the
 --   parameters are of type @t s@.
 --   When such components are composed, they all share the /same/ parameters.
 --
@@ -100,7 +100,7 @@ instance Applicative (ParamFun s t a) where pure = pureArr; (<*>) = apArr
 instance Profunctor (ParamFun s t) where dimap  = dimapArr
 
 -- | A @'Component' f g@ is a parameterized differentiable function @f Double -> g Double@.
---   In contrast to 'ParamFun', when components are composed, parameters are not shared. 
+--   In contrast to 'ParamFun', when components are composed, parameters are not shared.
 --   Each component carries its own collection of parameters instead.
 --
 data Component f g = forall t. (Traversable t, Applicative t, NFData (t Double)) => Component
@@ -120,7 +120,7 @@ _weights = lens (\(Component ws _ _)    -> toList ws)
 -- | Activates a component, i.e. applies it to the specified input, using the current parameter values.
 --
 activate :: Component f g -> f Double -> g Double
-activate (Component ws f _) xs = runPF f xs ws 
+activate (Component ws f _) xs = runPF f xs ws
 
 data Empty a = Empty deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
 
@@ -154,7 +154,7 @@ instance Category Component where
 
     Component ws c i . Component ws' c' i' = Component
         { weights = Pair ws ws'
-        , compute = ParamFun $ \x (Pair zs zs') -> runPF c (runPF c' x zs') zs 
+        , compute = ParamFun $ \x (Pair zs zs') -> runPF c (runPF c' x zs') zs
         , initR   = Pair <$> i <*> i'
         }
 
@@ -199,7 +199,7 @@ newtype Convolve f g a = Convolve { unConvolve :: f (g a) }
 
 -- | The analogue of 'convolve' for 'Component's.
 --
-cConvolve :: Functor h => Component f g -> Component (Convolve h f) (Convolve h g) 
+cConvolve :: Functor h => Component f g -> Component (Convolve h f) (Convolve h g)
 cConvolve (Component ws c i) = Component
     { weights = ws
     , compute = ParamFun $ \(Convolve xss) ws' -> Convolve $ flip (runPF c) ws' <$> xss
@@ -241,7 +241,7 @@ _component = lens (\(Model c _ _ _) -> c)
 model :: Model f g a b c -> b -> c
 model (Model c _ i o) = o . activate c . i
 
--- | Generates a model with randomly initialized weights. All other properties are copied from the provided model. 
+-- | Generates a model with randomly initialized weights. All other properties are copied from the provided model.
 modelR :: MonadRandom m => Model f g a b c -> m (Model f g a b c)
 modelR (Model c e i o) = case c of
     Component _ f r -> do
@@ -249,7 +249,7 @@ modelR (Model c e i o) = case c of
         return $ Model (Component ws f r) e i o
 
 errFun :: forall f t a g. Functor f
-          => (a -> (f Double, Diff g Identity)) 
+          => (a -> (f Double, Diff g Identity))
           -> a
           -> (forall s. Analytic s => ParamFun s t (f s) (g s))
           -> Diff t Identity
@@ -274,7 +274,7 @@ modelError m xs = mean $ modelError' m <$> toList xs
 
 -- | Performs one step of gradient descent/ backpropagation on the model,
 descent :: (Foldable h)
-           => Model f g a b c           -- ^ the model whose error should be decreased 
+           => Model f g a b c           -- ^ the model whose error should be decreased
            -> Double                    -- ^ the learning rate
            -> h a                       -- ^ a mini-batch of samples
            -> (Double, Model f g a b c) -- ^ returns the average sample error and the improved model
@@ -301,7 +301,7 @@ type StdModel f g b c = Model f g (b, c) b c
 -- | Creates a 'StdModel', using the simplifying assumtion that the error can be computed from the expected
 --   output allone.
 --
-mkStdModel :: (Functor f, Functor g) 
+mkStdModel :: (Functor f, Functor g)
               => Component f g
               -> (c -> Diff g Identity)
               -> (b -> f Double)
