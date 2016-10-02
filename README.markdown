@@ -37,9 +37,12 @@ way. - One simple example for this would be [linear regression](https://en.wikip
 
 ## Examples
 
-At the moment, three [examples](examples) are included:
+At the moment, four [examples](examples) are included:
 
-- [sqrt](examples/sqrt) models the regression problem of approximating the square root function on the interval [0,4].
+- [sin](examples/sin) models the regression problem of approximating the sine function on the interval [0,2 pi].
+
+- [sqrt](examples/sqrt) models the similar regression problem of approximating the square root function
+on the interval [0,4].
 
 - [iris](examples/iris) solves the famous [Iris Flower](https://en.wikipedia.org/wiki/Iris_flower_data_set) classification problem.
 
