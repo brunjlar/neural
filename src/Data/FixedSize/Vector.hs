@@ -1,10 +1,10 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 {-# OPTIONS_HADDOCK show-extensions #-}
@@ -27,6 +27,7 @@ This module defines fixed-length /vectors/ and some basic typeclass instances an
 
 module Data.FixedSize.Vector
     ( Vector
+    , vZipWith
     , (<%>)
     , nil
     , cons
@@ -45,51 +46,27 @@ module Data.FixedSize.Vector
 import           Data.FixedSize.Class
 import           Data.MyPrelude
 import           Data.Proxy
-import           Data.Utils.Traversable
+import           Data.Utils.Traversable (fromList)
 import qualified Data.Vector            as V
+import qualified Data.Vector.Sized      as VS
 import           GHC.TypeLits
-import           GHC.TypeLits.Witnesses
 
 -- | @'Vector' n a@ is the type of vectors of length @n@ with elements of type @a@.
-data Vector :: Nat -> * -> * where
-
-    Vector :: KnownNat n => V.Vector a -> Vector n a
-
-instance Eq a => Eq (Vector n a) where
-
-    Vector xs == Vector ys = xs == ys
+--   This is a simple wrapper around the 'VS.Vector' type from Joe Hermaszewski's
+--   <https://hackage.haskell.org/package/vector-sized-0.3.3.0 vector-sized> library.
+--
+newtype Vector n a = Vector (VS.Vector n a)
+    deriving (Eq, Functor, Applicative, Foldable, Traversable, NFData)
 
 instance Show a => Show (Vector n a) where
 
-    showsPrec p (Vector xs) = showsPrec p xs
-
-instance Functor (Vector n) where
-
-    fmap f (Vector v) = Vector (f <$> v)
-
-instance forall n. KnownNat n => Applicative (Vector n) where
-
-    pure x = let n = natVal (Proxy :: Proxy n) in Vector (V.replicate (fromIntegral n) x)
-
-    Vector fs <*> Vector xs = Vector (V.zipWith ($) fs xs)
-
-instance Foldable (Vector n) where
-
-    foldMap f (Vector xs) = foldMap f xs
-
-instance Traversable (Vector n) where
-
-    sequenceA (Vector xs) = Vector <$> sequenceA xs
+    show (Vector v) = show $ VS.fromSized v
 
 instance (KnownNat n, Read a) => Read (Vector n a) where
 
-    readsPrec p s = let xs  = readsPrec p s :: [(V.Vector a, String)]
-                        n'  = fromIntegral (natVal (Proxy :: Proxy n))
-                    in  [(Vector ys, t) | (ys, t) <- xs, length ys == n']    
-
-instance (NFData a) => NFData (Vector n a) where
-
-    rnf (Vector v) = rnf v
+    readsPrec p s = let xs = readsPrec p s
+                        n' = fromIntegral (natVal (Proxy :: Proxy n))
+                    in  [(Vector $ fromJust $ VS.toSized ys, t) | (ys, t) <- xs, length ys == n']
 
 instance KnownNat n => FixedSize (Vector n) where
 
@@ -97,9 +74,18 @@ instance KnownNat n => FixedSize (Vector n) where
 
     type Size (Vector n) = n
 
-    Vector v !? i = v V.!? i
+    (Vector v) !? i = VS.fromSized v V.!? i
 
-    generate = Vector . V.generate (fromIntegral $ natVal (Proxy :: Proxy n))
+    generate = Vector . VS.generate
+
+-- | Function @'vZipWith'@ zips two vectors of the same length, using the specified function.
+--
+-- >>> :set -XDataKinds
+-- >>> let f = fromJust . fromList in vZipWith div (f [6,9]) (f [2,3]) :: Vector 2 Int
+-- [3,3]
+--
+vZipWith :: (a -> b -> c) -> Vector n a -> Vector n b -> Vector n c
+vZipWith f (Vector v) (Vector w) = Vector $ VS.zipWith f v w
 
 -- | The /scalar product/ of two vectors of the same length.
 --
@@ -108,11 +94,11 @@ instance KnownNat n => FixedSize (Vector n) where
 -- 11
 --
 (<%>) :: Num a => Vector n a -> Vector n a -> a
-Vector v <%> Vector w = V.sum $ V.zipWith (*) v w
+v <%> w = sum $ vZipWith (*) v w
 
 -- | The vector of length zero.
 nil :: Vector 0 a
-nil = Vector V.empty
+nil = Vector VS.empty
 
 -- | Prepends the specified element to the specified vector.
 --
@@ -120,23 +106,23 @@ nil = Vector V.empty
 -- [False,True]
 --
 cons :: forall a n. a -> Vector n a -> Vector (n + 1) a
-cons x (Vector xs) = withNatOp (%+) (Proxy :: Proxy n) (Proxy :: Proxy 1) $ Vector $ V.cons x xs
+cons x (Vector xs) = Vector $ VS.cons x xs
 
 -- | Gets the first element of a vector of length greater than zero.
 --
 -- >>> vhead (cons 'x' (cons 'y' nil))
 -- 'x'
 --
-vhead :: (1 <= n) => Vector n a -> a
-vhead (Vector v) = V.head v
+vhead :: Vector (n + 1) a -> a
+vhead (Vector v) = VS.head v
 
 -- | For a vector of length greater than zero, gets the vector with its first element removed.
 --
 -- >>> vtail (cons 'x' (cons 'y' nil))
 -- "y"
 --
-vtail :: forall a n. (1 <= n) => Vector n a -> Vector (n - 1) a
-vtail (Vector v) = withNatOp (%-) (Proxy :: Proxy n) (Proxy :: Proxy 1) $ Vector (V.tail v)
+vtail :: forall a n. Vector (n + 1) a -> Vector n a
+vtail (Vector v) = Vector $ VS.tail v
 
 infixl 6 <+>
 
@@ -146,8 +132,8 @@ infixl 6 <+>
 -- >>> (cons 1 (cons 2 nil)) <+> (cons 3 (cons 4 nil)) :: Vector 2 Int
 -- [4,6]
 --
-(<+>) :: (Num a, KnownNat n) => Vector n a -> Vector n a -> Vector n a
-v <+> w = (+) <$> v <*> w
+(<+>) :: Num a => Vector n a -> Vector n a -> Vector n a
+(<+>) = vZipWith (+)
 
 infixl 6 <->
 
@@ -157,8 +143,8 @@ infixl 6 <->
 -- >>> (cons 1 (cons 2 nil)) <-> (cons 3 (cons 4 nil)) :: Vector 2 Int
 -- [-2,-2]
 --
-(<->) :: (Num a, KnownNat n) => Vector n a -> Vector n a -> Vector n a
-v <-> w = (-) <$> v <*> w
+(<->) :: Num a => Vector n a -> Vector n a -> Vector n a
+(<->) = vZipWith (-)
 
 -- | Calculates the /squared/ euclidean norm of a vector,
 --   i.e. the scalar product of the vector by itself.
@@ -182,7 +168,7 @@ sqDiff v w = sqNorm (v <-> w)
 -- | Converts a fixed-size container to a 'Vector' of the same size.
 --
 toVector :: (FixedSize f, KnownNat (Size f)) => f a -> Vector (Size f) a
-toVector = Vector . V.fromList . toList
+toVector = Vector . fromJust . VS.fromList . toList
 
 -- | Converts a 'Vector' to an arbitrary fixed-size container of the same size.
 --
