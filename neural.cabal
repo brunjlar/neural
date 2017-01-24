@@ -96,6 +96,7 @@ library
                      , pipes-bytestring
                      , pipes-safe
                      , profunctors
+                     , random
                      , reflection
                      , STMonadTrans
                      , text
