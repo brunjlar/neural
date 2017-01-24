@@ -33,7 +33,7 @@ module Data.MyPrelude
     , getArgs
     , (</>), (<.>)
     , withFile, IOMode(..), hPutStr, hPutStrLn
-    , StdGen, mkStdGen
+    , Random(..), StdGen, mkStdGen
     , printf
     ) where
 
@@ -57,5 +57,5 @@ import System.Directory           (getDirectoryContents)
 import System.Environment         (getArgs)
 import System.FilePath            ((</>), (<.>))
 import System.IO                  (withFile, IOMode(..), hPutStr, hPutStrLn)
-import System.Random              (StdGen, mkStdGen)
+import System.Random              (Random(..), StdGen, mkStdGen)
 import Text.Printf                (printf)
