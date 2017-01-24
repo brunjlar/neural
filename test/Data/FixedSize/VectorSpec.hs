@@ -74,7 +74,7 @@ toVectorSpec = describe "toVector" $ do
             w = toVector v
         toList w `shouldBe` "xxxxxx"
 fromVectorSpec :: Spec
-fromVectorSpec = describe "fromVectorSpec" $
+fromVectorSpec = describe "fromVector" $
 
     it "should be inverse to 'toVector'" $ do
 
