@@ -25,6 +25,7 @@ module Numeric.Neural.Convolution
 
 import Control.Category
 import Data.FixedSize
+import Data.Functor.Compose   (Compose(..))
 import Data.Proxy
 import Data.Utils
 import GHC.TypeLits
@@ -95,10 +96,13 @@ convolution :: forall s m n d m' n' d'.
                -> Int                  -- ^ the stride
                -> Layer (s * s * d) d' -- ^ the layer to convolve
                -> Component (Volume m n d) (Volume m' n' d')
-convolution ps stride l = cArr (Diff $ toVolume . unConvolve) .
+convolution ps stride l = cArr (Diff $ toVolume . unCompose) .
                           cConvolve l .
-                          cArr (Diff $ Convolve . cover' ps stride)
+                          cArr (Diff $ Compose . cover' ps stride)
 
   where
+
+    unCompose :: Compose f g a -> f (g a)
+    unCompose (Compose x) = x
 
     _ = natVal (Proxy :: Proxy d)

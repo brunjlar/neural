@@ -1,5 +1,7 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 {-# LANGUAGE Arrows #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ExistentialQuantification #-}
@@ -35,9 +37,6 @@ module Numeric.Neural.Model
     , Component(..)
     , _weights
     , activate
-    , Pair(..)
-    , FEither(..)
-    , Convolve(..)
     , cArr
     , cFirst
     , cLeft
@@ -57,6 +56,9 @@ import Control.Arrow
 import Control.Category
 import Control.Monad.Par            (runPar)
 import Control.Monad.Par.Combinator (parMapReduceRange, InclusiveRange(..))
+import Data.Functor.Compose         (Compose(..))
+import Data.Functor.Product         (Product(..))
+import Data.Functor.Sum             (Sum(..))
 import Data.Profunctor
 import Data.MyPrelude
 import Prelude                      hiding (id, (.))
@@ -134,19 +136,9 @@ instance NFData (Empty a) where
 
     rnf Empty = ()
 
--- | The analogue for pairs in the category of functors.
---
-data Pair s t a = Pair (s a) (t a) deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
-
-instance (NFData (s a), NFData (t a)) => NFData (Pair s t a) where
+instance (NFData (s a), NFData (t a)) => NFData (Product s t a) where
 
     rnf (Pair xs ys) = rnf xs `seq` rnf ys `seq` ()
-
-instance (Applicative s, Applicative t) => Applicative (Pair s t) where
-
-    pure x = Pair (pure x) (pure x)
-
-    Pair f g <*> Pair x y = Pair (f <*> x) (g <*> y)
 
 instance Category Component where
 
@@ -169,40 +161,30 @@ cArr (Diff f) = Component
 
 -- | The analogue of 'Control.Arrow.first' for 'Component's.
 --
-cFirst :: Component f g -> Component (Pair f h) (Pair g h)
+cFirst :: Component f g -> Component (Product f h) (Product g h)
 cFirst (Component ws c i) = Component
     { weights = ws
     , compute = ParamFun $ \(Pair xs ys) ws' -> Pair (runPF c xs ws') ys
     , initR   = i
     }
 
--- | The analogue for 'Either' in the category of functors.
---
-data FEither f g a = FLeft (f a) | FRight (g a)
-    deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
-
 -- | The analogue of 'Control.Arrow.left' for 'Component's.
 --
-cLeft :: Component f g -> Component (FEither f h) (FEither g h)
+cLeft :: Component f g -> Component (Sum f h) (Sum g h)
 cLeft (Component ws c i) = Component
     { weights = ws
     , compute = ParamFun $ \es ws' -> case es of
-        FLeft xs  -> FLeft $ runPF c xs ws'
-        FRight ys -> FRight ys
+        InL xs -> InL $ runPF c xs ws'
+        InR ys -> InR ys
     , initR   = i
     }
 
--- | Composition of functors.
---
-newtype Convolve f g a = Convolve { unConvolve :: f (g a) }
-    deriving (Show, Read, Eq, Ord, Functor, Foldable, Traversable)
-
 -- | The analogue of 'convolve' for 'Component's.
 --
-cConvolve :: Functor h => Component f g -> Component (Convolve h f) (Convolve h g)
+cConvolve :: Functor h => Component f g -> Component (Compose h f) (Compose h g)
 cConvolve (Component ws c i) = Component
     { weights = ws
-    , compute = ParamFun $ \(Convolve xss) ws' -> Convolve $ flip (runPF c) ws' <$> xss
+    , compute = ParamFun $ \(Compose xss) ws' -> Compose $ flip (runPF c) ws' <$> xss
     , initR   = i
     }
 
