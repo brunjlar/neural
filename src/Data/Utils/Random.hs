@@ -34,6 +34,7 @@ import           Control.Monad.Trans.Class (lift)
 import qualified Data.Array                as A
 import           Data.List                 (mapAccumL)
 import           Data.Utils.List           (pick)
+import           System.Random             (Random(..))
 
 pickR'' :: MonadRandom m => Int -> [a] -> m (a, [a])
 pickR'' l xs = do
