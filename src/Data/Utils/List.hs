@@ -106,11 +106,11 @@ lzFocus = snd
 
 -- | @'ListEditorT' a m@ is a monad transformer for editting lists of type @[a]@.
 --
-newtype ListEditorT a m b = ListEditorT (S.StateT (LZ a) m b) 
+newtype ListEditorT a m b = ListEditorT (S.StateT (LZ a) m b)
     deriving (Functor, Applicative, Monad, S.MonadState (LZ a))
 
 -- | Runs the editor.
--- 
+--
 editListT :: Monad m => ListEditorT a m () -> [a] -> m [a]
 editListT (ListEditorT e) xs = lzToList <$> S.execStateT e (lz xs)
 
@@ -151,7 +151,7 @@ type ListEditor a = ListEditorT a I.Identity
 -- [1,3,2]
 --
 editList :: ListEditor a () -> [a] -> [a]
-editList e xs = I.runIdentity $ editListT e xs 
+editList e xs = I.runIdentity $ editListT e xs
 
 -- | Gets all pairs of adjacent list elements.
 --

@@ -25,7 +25,7 @@ A 'Volume' is a 'Matrix' with 'Vector' entries, i.e. a three-dimensional array.
 -}
 
 module Data.FixedSize.Volume
-    ( Volume(..) 
+    ( Volume(..)
     , toVolume
     , slice
     , fromMatrix
@@ -73,7 +73,7 @@ instance (KnownNat m, KnownNat n, KnownNat d) => FixedSize (Volume m n d) where
 -- Nothing
 --
 slice :: KnownNat d => Volume m n d a -> Int -> Maybe (Matrix m n a)
-slice (Volume m) i = sequenceA $ (!? i) <$> m 
+slice (Volume m) i = sequenceA $ (!? i) <$> m
 
 -- | Converts a 'Matrix' into a 'Volume' of depth one.
 --

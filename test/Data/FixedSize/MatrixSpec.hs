@@ -20,7 +20,7 @@ mulSpec = describe "(<%%>)" $
 
     it "should multiply a matrix by a vector" $ do
         let v = generate succ :: Vector 3 Int
-        m <%%> v `shouldBe` cons 14 (cons 32 nil) 
+        m <%%> v `shouldBe` cons 14 (cons 32 nil)
 
 rowSpec :: Spec
 rowSpec = describe "row" $ do
@@ -65,7 +65,7 @@ apSpec :: Spec
 apSpec = describe "(<*>)" $
 
     it "should be component-wise application" $
-        (-) <$> m <*> m `shouldBe` pure 0 
+        (-) <$> m <*> m `shouldBe` pure 0
 
 generateSpec :: Spec
 generateSpec = describe "generate" $

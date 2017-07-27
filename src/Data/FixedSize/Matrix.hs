@@ -22,7 +22,7 @@ This module defines fixed-size /matrices/ and some basic typeclass instances and
 -}
 
 module Data.FixedSize.Matrix
-    ( Matrix(..) 
+    ( Matrix(..)
     , (<%%>)
     , row
     , column
@@ -36,7 +36,7 @@ import GHC.TypeLits
 
 -- | @'Matrix' m n a@ is the type of /matrices/ with @m@ rows, @n@ columns and entries of type @a@.
 --
-newtype Matrix (m :: Nat) (n :: Nat) a = Matrix (Vector m (Vector n a)) 
+newtype Matrix (m :: Nat) (n :: Nat) a = Matrix (Vector m (Vector n a))
     deriving (Eq, Show, Functor, Foldable, Traversable, NFData)
 
 instance (KnownNat m, KnownNat n) => Applicative (Matrix m n) where

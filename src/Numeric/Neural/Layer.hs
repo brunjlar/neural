@@ -46,8 +46,8 @@ linearLayer' :: forall i o s. Analytic s => ParamFun s (Matrix o (i + 1)) (Vecto
 linearLayer' = ParamFun $ \xs ws -> ws <%%> cons 1 xs
 
 -- | Creates a /linear/ 'Layer', i.e. a layer that multiplies the input with a weight 'Matrix' and adds a bias to get the output.
---   
---   Random initialization follows the recommendation from chapter 3 of the online book 
+--
+--   Random initialization follows the recommendation from chapter 3 of the online book
 --   <http://neuralnetworksanddeeplearning.com/ Neural Networks and Deep Learning> by Michael Nielsen.
 linearLayer :: forall i o. (KnownNat i, KnownNat o) => Layer i o
 linearLayer = withNatOp (%+) p (Proxy :: Proxy 1) Component
@@ -87,13 +87,13 @@ tanhLayer' = layer $ \x -> 1.7159 * tanh (2 * x / 3)
 logisticLayer :: (KnownNat i, KnownNat o) => Layer i o
 logisticLayer = layer $ \x -> 1 / (1 + exp (- x))
 
--- | This is a simple 'Layer', specialized to the /rectified linear unit/ activation function. 
+-- | This is a simple 'Layer', specialized to the /rectified linear unit/ activation function.
 --   Output values are all non-negative.
 --
 reLULayer :: (KnownNat i, KnownNat o) => Layer i o
 reLULayer = layer $ \x -> max 0 x
 
--- | The 'softmax' function normalizes a vector, so that all entries are in [0,1] with sum 1. 
+-- | The 'softmax' function normalizes a vector, so that all entries are in [0,1] with sum 1.
 --   This means the output entries can be interpreted as probabilities.
 --
 softmax :: (Floating a, Functor f, Foldable f) => f a -> f a

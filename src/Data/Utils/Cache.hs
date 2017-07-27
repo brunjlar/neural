@@ -1,6 +1,5 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
@@ -60,7 +59,7 @@ retrieveC c xs = do
         n        = foldl' (flip M.delete) (cMap c) ys
         xs''     = toList xs'
     vs <- cGet c xs''
-    let xvs = zip xs'' vs 
+    let xvs = zip xs'' vs
         l   = max (cCapacity c) $ length ys
         m'  = foldl' (\m'' (x, v) -> M.insert x v m'') m xvs
         n'  = foldl' (\n'' (x, v) -> M.insert x v n'') n $ take l xvs

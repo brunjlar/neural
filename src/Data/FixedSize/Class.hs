@@ -18,7 +18,7 @@ This module defines the class of fixed-size containers.
 -}
 
 module Data.FixedSize.Class
-    ( FixedSize(..) 
+    ( FixedSize(..)
     , (!)
     ) where
 

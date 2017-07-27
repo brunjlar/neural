@@ -148,7 +148,7 @@ roulette :: forall a b m. (Ord b, Fractional b, Random b, MonadRandom m) => Int 
 roulette n xs = do
     let (!s, ys) = mapAccumL f 0 xs
         zs       = map (\(a, b) -> (a, b / s)) ys
-    replicateM n $ g zs <$> getRandomR (0, 1) 
+    replicateM n $ g zs <$> getRandomR (0, 1)
 
   where
 

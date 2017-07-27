@@ -13,7 +13,7 @@ This module reexports various utility modules for convenience.
 -}
 
 module Data.Utils
-    ( module Data.FixedSize 
+    ( module Data.FixedSize
     , module Data.Utils.Analytic
     , module Data.Utils.Arrow
     , module Data.Utils.Cache

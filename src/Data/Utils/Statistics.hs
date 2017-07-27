@@ -36,9 +36,9 @@ import Data.Ord         (Down(..))
 
 -- | A type for representing probabilities.
 --
-newtype Probability a = Probability 
-    { fromProbability :: a -- ^ the wrapped number 
-    } 
+newtype Probability a = Probability
+    { fromProbability :: a -- ^ the wrapped number
+    }
     deriving (Show, Read, Eq, Ord, Num, NFData, Functor)
 
 -- | Smart constructor for probabilities.
@@ -94,7 +94,7 @@ mean xs =
     f :: (Int, a) -> a -> (Int, a)
     f (!n, !s) !x = (succ n, s + x)
 
--- | Calculates the 
+-- | Calculates the
 --   <https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve area under the curve>.
 --
 -- >>> auc [(1, False), (2, True), (3, False), (4, True), (5, False), (6, True), (7, True)]
@@ -103,7 +103,7 @@ mean xs =
 auc :: Ord a => [(a, Bool)] -> Probability Double
 auc = probability . auc' . map (\(a, b) -> (a, 1 :: Double, b))
 
--- | Calculates the 
+-- | Calculates the
 --   <https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve area under the curve>
 --   for /weighted/ samples.
 --
@@ -132,7 +132,7 @@ auc' xs = let (ps , ns ) = partition third xs
 
       where
 
-        f ys = let !sb = sum $ map snd ys 
+        f ys = let !sb = sum $ map snd ys
                in  map (\(a, b) -> (a, let !q = b / sb in q)) ys
 
         g = groupBy ((==) `on` fst)
@@ -144,11 +144,11 @@ auc' xs = let (ps , ns ) = partition third xs
 
     go :: b -> [(a, b)] -> [(a, b, b)] -> b
     go !x []                _                        = x
-    go !x _                 []                       = x 
+    go !x _                 []                       = x
     go !x ps@((a, b) : ps') ns@((a', b', b'') : ns')
         | a > a'                                     = go (x + b * (b' + b''))     ps' ns
-        | a == a'                                    = go (x + b * (b' / 2 + b'')) ps' ns' 
-        | otherwise                                  = go x                        ps  ns' 
+        | a == a'                                    = go (x + b * (b' / 2 + b'')) ps' ns'
+        | otherwise                                  = go x                        ps  ns'
 
 -- | Rounds a 'Double' to the specified number of decimals.
 --

@@ -13,7 +13,7 @@ Maintainer  : brunjlar@gmail.com
 Stability   : experimental
 Portability : portable
 
-This module defines the numeric class 'Analytic', "differentiable" functions @'Diff' f g@ 
+This module defines the numeric class 'Analytic', "differentiable" functions @'Diff' f g@
 and an adapted version of 'Numeric.AD.gradWith''.
 -}
 
@@ -28,7 +28,7 @@ module Data.Utils.Analytic
 import           Control.Category
 import           Data.MyPrelude
 import           Data.Reflection             (Reifies)
-import qualified Numeric.AD                  as AD                  
+import qualified Numeric.AD                  as AD
 import           Numeric.AD.Internal.Reverse (Reverse, Tape)
 import Prelude                               hiding (id, (.))
 
@@ -64,12 +64,12 @@ type Diff' = forall a. Analytic a => a -> a
 diff :: Functor f => Diff' -> Diff f f
 diff f = Diff (fmap f)
 
--- | Computes the gradient of an analytic function and combines it with the argument. 
+-- | Computes the gradient of an analytic function and combines it with the argument.
 --
 -- >>> gradWith' (\_ d -> d) (Diff $ \[x, y] -> Identity $ x * x + 3 * y + 7) [2, 1]
 -- (14.0,[4.0,3.0])
 --
-gradWith' :: Traversable t 
+gradWith' :: Traversable t
              => (Double -> Double -> a) -- ^ how to combine argument and gradient
              -> Diff t Identity         -- ^ differentiable function
              -> t Double                -- ^ function argument

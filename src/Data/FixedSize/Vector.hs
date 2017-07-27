@@ -8,8 +8,6 @@
 
 {-# OPTIONS_HADDOCK show-extensions #-}
 
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
-
 {-|
 Module      : Data.FixedSize.Vector
 Description : fixed-length vectors

@@ -45,7 +45,7 @@ class Arrow a => ArrowConvolve a where
 fmapArr :: Arrow a => (c -> d) -> a b c -> a b d
 fmapArr f a = a >>^ f
 
--- | A function to define 'pure' for arrows. 
+-- | A function to define 'pure' for arrows.
 -- Combining this with 'apArr', the canonical 'Applicative' instance for arrows can easily be defined.
 --
 pureArr :: Arrow a => c -> a b c

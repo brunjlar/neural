@@ -167,9 +167,9 @@ white xss = ((w <$> sequenceA xss) <*>) where
 -- | Modifies a 'Model' by whitening the input before feeding it into the embedded component.
 --
 whiten :: (Applicative f, Traversable t)
-          => Model f g a b c             -- ^ original model 
+          => Model f g a b c             -- ^ original model
           -> t b                         -- ^ batch of input data
-          -> Model f g a b c             
+          -> Model f g a b c
 whiten (Model c e i o) xss = Model c e' i' o where
 
     w = white $ i <$> xss
