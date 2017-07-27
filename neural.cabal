@@ -1,12 +1,12 @@
 name:                neural
-version:             0.3.0.0
+version:             0.3.0.1
 synopsis:            Neural Networks in native Haskell
-description:         
+description:
   The goal of `neural` is to provide a modular and flexible neural network library written in native Haskell.
   .
-  Features include 
+  Features include
   .
-  * /composability/ via arrow-like instances and 
+  * /composability/ via arrow-like instances and
     <https://hackage.haskell.org/package/pipes pipes>,
   .
   * /automatic differentiation/ for automatic gradient descent/ backpropagation training
@@ -21,7 +21,7 @@ description:
   .
   * Another simple neural network that approximates the sqrt function on [0,4].
   .
-  * A slightly more complicated neural network that solves the famous 
+  * A slightly more complicated neural network that solves the famous
     <https://en.wikipedia.org/wiki/Iris_flower_data_set Iris flower> problem.
   .
   * A first (still simple) neural network for recognizing handwritten digits from the equally famous
@@ -47,7 +47,7 @@ category:            Machine Learning
 build-type:          Simple
 cabal-version:       >=1.10
 stability:           provisional
-tested-with:         GHC == 7.10.3, GHC == 8.0.1
+tested-with:         GHC == 7.10.3, GHC == 8.0.1, GHC == 8.0.2
 
 library
   hs-source-dirs:      src
@@ -192,5 +192,4 @@ source-repository head
 source-repository this
   type:     git
   location: https://github.com/brunjlar/neural.git
-  tag:      0.3.0.0
-
+  tag:      0.3.0.1
