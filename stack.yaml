@@ -9,5 +9,5 @@ extra-deps:
 - pipes-zlib-0.4.4.1
 resolver: lts-9.0
 nix:
-    enable: true
+    enable: false
     shell-file: shell.nix
