@@ -100,7 +100,7 @@ nil = Vector VS.empty
 -- >>> cons False (cons True nil)
 -- [False,True]
 --
-cons :: forall a n. a -> Vector n a -> Vector (n + 1) a
+cons :: forall a n. a -> Vector n a -> Vector (1 + n) a
 cons x (Vector xs) = Vector $ VS.cons x xs
 
 -- | Gets the first element of a vector of length greater than zero.
@@ -108,7 +108,7 @@ cons x (Vector xs) = Vector $ VS.cons x xs
 -- >>> vhead (cons 'x' (cons 'y' nil))
 -- 'x'
 --
-vhead :: Vector (n + 1) a -> a
+vhead :: Vector (1 + n) a -> a
 vhead (Vector v) = VS.head v
 
 -- | For a vector of length greater than zero, gets the vector with its first element removed.
@@ -116,7 +116,7 @@ vhead (Vector v) = VS.head v
 -- >>> vtail (cons 'x' (cons 'y' nil))
 -- "y"
 --
-vtail :: forall a n. Vector (n + 1) a -> Vector n a
+vtail :: forall a n. Vector (1 + n) a -> Vector n a
 vtail (Vector v) = Vector $ VS.tail v
 
 infixl 6 <+>
