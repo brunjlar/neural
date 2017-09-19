@@ -1,57 +1,69 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
+{-# LANGUAGE BangPatterns #-}
+
 module Numeric.Neural.Reinforcement
     ( reinforcementBatchP
-    , module Reinforcement
+    , reinforceDescentP
+    , Scalable(..)
     ) where
 
 import           Data.MyPrelude
 import           Numeric.Neural.Model
 import           Numeric.Neural.Normalization
-import           Numeric.Nueral.Pipes
+import           Numeric.Neural.Pipes
 import           Data.Utils.Cache
 import           Data.Utils.Random            (takeR)
 import           Pipes
+import           Pipes.Core
 import qualified Pipes.Prelude as P
 
 
 
-NN :: Model _ _ _ CarState (Prob DriveState)
-
-mkStochasitcModel _ _ _ b c =
-  mkStdModel _ _ (b,c) b (mkProb c)
-
-class Discrete a where
-  discretize :: a -> a
-
-instance Num a => Discretize a where
-  discretize val =     
-
-class ProbWrapper p where
-  sample (p val) = random 
-  liftProb action =
-  mkProb ? = ? :: (* -> *)
-
-instance Num ProbWrapper where
-  (*) = 
+class Scalable a where
+  scale :: a -> Double -> a
+instance Scalable Double where
+  scale = (*)
+--instance Scalable DriveStateProbs where
+--  scale ds{..} s = ds{..} -- * s
 
 -- | Reinforcement learning needs a new example set for each iteration
 --   This takes an effectful way to run an episode with the current model
---   and collect the actions from said episode and their resulting 'advantages'
+--   and collect the actions (as 100% probs) from said episode and their resulting 'advantages'
 --   NB this requires a stochastic policy model and
 --   uses the 'advantage' to scale the probabilities for training
 --
-reinforcementBatchP :: MonadRandom m, ProbWrapper p
-                 => (Model f g (b,p c) b (p c) -> IO [(b,c,Double)]) -- ^ get input,action,advantage samples based on current model
-                 -> Int                                              -- ^ mini-batch size
-                 -> Producer (TS f g (b,p c) b (p c)) [(b,p c)] m s  -- need the current model state to generate new samples, but we do not change the model
-reinforcementBatchP f ns = do
-    loop
-  where
+reinforcementBatchP :: (Scalable c)
+                       -- TODO this way Prob is built into the model and IO, would rather not have Prob built into IO op
+                       => ((Model f g (b,c) b c) -> IO [(b,c,Double)]) -- ^ get input,action(where action is a 100% prob on taken action),advantage samples based on current model
+                       -> Int                                         -- ^ mini-batch size
+                       -> (Model f g (b,c) b c)
+                       -> Server (Model f g (b,c) b c) [(b,c)] IO ()      -- need the current model state to generate new samples, but we do not change the model
+reinforcementBatchP f ns ts =  forever $ do
+  xs <- lift $ f $ ts --TODO how to select 'ns' samples
+  let xs' = map (\(i,o,advtg) -> (i,scale o advtg)) xs 
+  respond xs'
 
-    loop c = do
-       ts <- await
-       xs <- take ns $ f (model ts) --TODO how to select 'ns' samples
-       map (\(i,o,advtg) -> (i,(liftProb o)*advtg)) xs >>= yield
-       loop c'
+
+-- | A 'Pipe' for training a model: It consumes mini-batches of samples from upstream and pushes
+--   the updated training state downstream.
+--
+reinforceDescentP :: (Foldable h, Monad m) =>
+            Model f g a b c                  -- ^ initial model
+            -> Int                           -- ^ first generation
+            -> (Int -> Double)               -- ^ computes the learning rate from the generation
+            -> Proxy (Model f g a b c) (h a) () (TS f g a b c) m r
+reinforceDescentP m i f = loop m i where
+
+    loop m' i' = do
+        xs <- request m'
+        let !eta = f i'
+        let (e, m'') = descent m' eta xs
+        m'' `deepseq` yield TS
+            { tsModel      = m''
+            , tsGeneration = i'
+            , tsEta        = eta
+            , tsBatchError = e
+            }
+        loop m'' (succ i')
 
