@@ -31,7 +31,7 @@ instance Scalable Double where
 --   This takes an effectful way to run an episode with the current model
 --   and collect the actions (as 100% probs) from said episode and their resulting 'advantages'
 --   NB this requires a stochastic policy model and
---   uses the 'advantage' to scale the probabilities for training
+--   automatically uses the 'advantage' to scale the probabilities for training
 --
 reinforcementBatchP :: (Scalable c)
                        -- TODO this way Prob is built into the model and IO, would rather not have Prob built into IO op
@@ -45,10 +45,12 @@ reinforcementBatchP f ns ts =  forever $ do
   respond xs'
 
 
--- | A 'Pipe' for training a model: It consumes mini-batches of samples from upstream and pushes
---   the updated training state downstream.
+-- | Training a reinforcement model: 
+--   Pushes the current model upsteam
+--   Consumes the response of samples (already scaled by advantage) from upstream simulator
+--   and sends the updated training state downstream.
 --
-reinforceDescentP :: (Foldable h, Monad m) =>
+reinforceDescentP :: (Show a,Foldable h, Monad m) =>
             Model f g a b c                  -- ^ initial model
             -> Int                           -- ^ first generation
             -> (Int -> Double)               -- ^ computes the learning rate from the generation

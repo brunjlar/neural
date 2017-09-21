@@ -67,6 +67,8 @@ import Data.Utils.Arrow
 import Data.Utils.Statistics        (mean)
 import Data.Utils.Traversable
 
+import Debug.Trace
+
 -- | The type @'ParamFun' s t a b@ describes parameterized functions from @a@ to @b@, where the
 --   parameters are of type @t s@.
 --   When such components are composed, they all share the /same/ parameters.
@@ -255,26 +257,27 @@ modelError :: Foldable h => Model f g a b c -> h a -> Double
 modelError m xs = mean $ modelError' m <$> toList xs
 
 -- | Performs one step of gradient descent/ backpropagation on the model,
-descent :: (Foldable h)
+descent :: (Show a, Foldable h)
            => Model f g a b c           -- ^ the model whose error should be decreased
            -> Double                    -- ^ the learning rate
            -> h a                       -- ^ a mini-batch of samples
            -> (Double, Model f g a b c) -- ^ returns the average sample error and the improved model
 descent (Model c e i o) eta xs = case c of
     Component ws f r ->
-        let xs'                       = toList xs
+        let xs'                       = traceShow (concatMap show xs) (toList xs)
             l                         = length xs'
             l'                        = fromIntegral l
             scale                     = eta / l'
             q j                       = do
                                             let x          = xs' !! j
-                                                (err', g') = gradWith' (\_ dw -> scale * dw) (errFun e x f) ws
-                                            return (err' / l', g')
-            s (err', g') (err'', g'') = return (err' + err'', (+) <$> g' <*> g'')
+                                                (err', g') = gradWith' (\_ dw -> scale * (if isNaN dw then 0 else dw)) (errFun e x f) (trace ("Weights = "++showV ws) ws)
+                                            return (trace (" err at "++show x ++" = "++show err' ++ " / " ++ show l') (err' / l'), trace (showV g') g')
+            s (err', g') (err'', g'') = return (err' + err'', ((+) <$> g' <*> g''))
             (err, ws')                = runPar $ parMapReduceRange (InclusiveRange 0 $ pred l) q s (0, pure 0)
-            ws''                      = (-) <$> ws <*> ws'
+            ws''                      = (-) <$> ws <*> (trace ("updates = "++showV ws') ws')
             c'                        = Component ws'' f r
             m                         = Model c' e i o
+            showV                     = concatMap (\x -> show x++", ")
         in  (err, m)
 
 -- | A type abbreviation for the most common type of models, where samples are just input-output tuples.
