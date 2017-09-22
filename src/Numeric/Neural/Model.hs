@@ -264,20 +264,19 @@ descent :: (Show a, Foldable h)
            -> (Double, Model f g a b c) -- ^ returns the average sample error and the improved model
 descent (Model c e i o) eta xs = case c of
     Component ws f r ->
-        let xs'                       = traceShow (concatMap show xs) (toList xs)
+        let xs'                       = (toList xs)
             l                         = length xs'
             l'                        = fromIntegral l
             scale                     = eta / l'
             q j                       = do
                                             let x          = xs' !! j
-                                                (err', g') = gradWith' (\_ dw -> scale * (if isNaN dw then 0 else dw)) (errFun e x f) (trace ("Weights = "++showV ws) ws)
-                                            return (trace (" err at "++show x ++" = "++show err' ++ " / " ++ show l') (err' / l'), trace (showV g') g')
+                                                (err', g') = gradWith' (\_ dw -> scale * (if isNaN dw then 0 else dw)) (errFun e x f) ws
+                                            return ((err' / l'), g')
             s (err', g') (err'', g'') = return (err' + err'', ((+) <$> g' <*> g''))
             (err, ws')                = runPar $ parMapReduceRange (InclusiveRange 0 $ pred l) q s (0, pure 0)
-            ws''                      = (-) <$> ws <*> (trace ("updates = "++showV ws') ws')
+            ws''                      = (-) <$> ws <*> ws'
             c'                        = Component ws'' f r
             m                         = Model c' e i o
-            showV                     = concatMap (\x -> show x++", ")
         in  (err, m)
 
 -- | A type abbreviation for the most common type of models, where samples are just input-output tuples.
