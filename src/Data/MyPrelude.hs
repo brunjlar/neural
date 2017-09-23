@@ -18,7 +18,7 @@ module Data.MyPrelude
     , when, unless, forM, forM_, void, replicateM, replicateM_, forever, guard
     , Identity(..)
     , MonadIO(..)
-    , MonadRandom, getRandom, getRandomR, Rand, RandT, runRand, evalRand, runRandT, evalRandT
+    , MonadRandom, getRandom, getRandomR, Rand, RandT, runRand, evalRand, runRandT, evalRandT, evalRandIO
     , MonadState(..)
     , lift
     , State, StateT, modify, runState, evalState, execState, runStateT, evalStateT, execStateT
@@ -42,7 +42,7 @@ import Control.Lens               ((&), (^.), (.~), Lens', Getter, to, lens)
 import Control.Monad              (when, unless, forM, forM_, void, replicateM, replicateM_, forever, guard)
 import Control.Monad.Identity     (Identity(..))
 import Control.Monad.IO.Class     (MonadIO(..))
-import Control.Monad.Random       (MonadRandom, getRandom, getRandomR, Rand, RandT, runRand, evalRand, runRandT, evalRandT)
+import Control.Monad.Random       (MonadRandom, getRandom, getRandomR, Rand, RandT, runRand, evalRand, runRandT, evalRandT, evalRandIO)
 import Control.Monad.State.Class  (MonadState(..))
 import Control.Monad.Trans.Class  (lift)
 import Control.Monad.Trans.State  (State, StateT, modify, runState, evalState, execState, runStateT, evalStateT, execStateT)

@@ -58,6 +58,7 @@ library
                      , Numeric.Neural.Normalization
                      , Numeric.Neural.Pipes
                      , Numeric.Neural.Reinforcement
+                     , Numeric.Neural.Genetic
                      , Data.FixedSize
                      , Data.FixedSize.Class
                      , Data.FixedSize.Matrix
