@@ -42,28 +42,22 @@ geneticTrain f gs ts = loop ts
        loop $ bestModel
     
 
+type ModelSet f g a b c f' g' a' b' c' = ((Model f g a b c), (Model f' g' a' b' c'))
+
 -- | Just try random weights and always take the best one
 --
 geneticTrainL ::
-       ([Model f g a b c] -> IO Double) -- ^ run the model and get cost
+       (ModelSet f g a b c f' g' a' b' c' -> IO Double) -- ^ run the model and get cost
        -> Int                            -- ^ generation size
-       -> (Double,[Model f g a b c])
-       -> Producer [TS f g a b c] IO ()      -- produces better and better models (hopefully)
+       -> (Double,ModelSet f g a b c f' g' a' b' c')
+       -> Producer (ModelSet f g a b c f' g' a' b' c') IO ()      -- produces better and better models (hopefully)
 geneticTrainL f gs ts = loop ts 
    where
     loop oldBestL = do
-       newGen <- mapM (lift. (\ms-> (evalRandIO$ modelR$ head ms) >>= (\x-> return (x:tail ms)))) (replicate gs (snd oldBestL))
+       newGen <- mapM (lift. (\ms-> (evalRandIO$ modelR$ fst ms) >>= (\x-> return (x,snd ms)))) (replicate gs (snd oldBestL))
        costs <- mapM (lift. f) newGen
        let cs = zip costs newGen
        let bestModelL = maximumBy (\x y -> compare (fst x) (fst y)) (oldBestL:cs)
-       bestModelL `deepseq` yield $
-         map 
-         (\m-> TS
-            { tsModel      = m
-            , tsGeneration = 1 --not sure this is used anyway
-            , tsEta        = 0 --also dont think this matters
-            , tsBatchError = fst bestModelL
-            })
-         (snd$ bestModelL)
+       bestModelL `deepseq` yield $ snd bestModelL
        loop $ bestModelL
     
