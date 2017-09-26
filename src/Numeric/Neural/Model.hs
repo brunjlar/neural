@@ -45,6 +45,7 @@ module Numeric.Neural.Model
     , _component
     , model
     , modelR
+    , modelG
     , modelError
     , descent
     , StdModel
@@ -232,6 +233,16 @@ modelR (Model c e i o) = case c of
         ws <- r
         return $ Model (Component ws f r) e i o
 
+-- | Generates a model with weights slightly mutated from the original model. All other properties are copied from the provided model. 
+modelG :: MonadRandom m => Model f g a b c -> m (Model f g a b c)
+modelG (Model c e i o) = case c of
+    Component oldWs f r -> do
+        updateWs <- mapM mutate oldWs
+        return $ Model (Component updateWs f r) e i o
+  where
+    mutate x = do
+     mutr <- getRandom
+     return (mutr*0.01+x)
 errFun :: forall f t a g. Functor f
           => (a -> (f Double, Diff g Identity))
           -> a

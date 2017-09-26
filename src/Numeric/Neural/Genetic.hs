@@ -24,12 +24,15 @@ import Data.List
 geneticTrain :: 
        ((Model f g a b c) -> IO Double) -- ^ run the model and get cost
        -> Int                            -- ^ generation size
-       -> (Double,Model f g a b c)
+       -> Int                            -- ^ number of spawn based on previous best
+       -> (Double,(Model f g a b c))
        -> Producer (TS f g a b c) IO ()      -- produces better and better models (hopefully)
-geneticTrain f gs ts = loop ts 
+geneticTrain f gs ss ts = loop ts 
    where
     loop oldBest = do
-       newGen <- mapM (lift. evalRandIO. modelR) (replicate gs (snd oldBest))
+       randomGen <- mapM (lift. evalRandIO. modelR) (replicate (gs-ss) (snd oldBest))
+       improvedGen <- mapM (lift. evalRandIO. modelG) (replicate ss (snd oldBest))
+       let newGen = randomGen++improvedGen
        costs <- mapM (lift. f) newGen
        let cs = zip costs newGen
        let bestModel = maximumBy (\x y -> compare (fst x) (fst y)) (oldBest:cs)
