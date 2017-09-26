@@ -4,7 +4,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module Numeric.Neural.Genetic
-    ( geneticTrain
+    ( geneticTrain ,
+      geneticTrainL
     ) where
 
 import           Data.MyPrelude
@@ -23,7 +24,7 @@ import Data.List
 geneticTrain :: 
        ((Model f g a b c) -> IO Double) -- ^ run the model and get cost
        -> Int                            -- ^ generation size
-       -> (Double,(Model f g a b c))
+       -> (Double,Model f g a b c)
        -> Producer (TS f g a b c) IO ()      -- produces better and better models (hopefully)
 geneticTrain f gs ts = loop ts 
    where
@@ -39,4 +40,30 @@ geneticTrain f gs ts = loop ts
             , tsBatchError = fst bestModel
             }
        loop $ bestModel
+    
+
+-- | Just try random weights and always take the best one
+--
+geneticTrainL ::
+       ([Model f g a b c] -> IO Double) -- ^ run the model and get cost
+       -> Int                            -- ^ generation size
+       -> (Double,[Model f g a b c])
+       -> Producer [TS f g a b c] IO ()      -- produces better and better models (hopefully)
+geneticTrainL f gs ts = loop ts 
+   where
+    loop oldBestL = do
+       newGen <- mapM (lift. (\ms-> (evalRandIO$ modelR$ head ms) >>= (\x-> return (x:tail ms)))) (replicate gs (snd oldBestL))
+       costs <- mapM (lift. f) newGen
+       let cs = zip costs newGen
+       let bestModelL = maximumBy (\x y -> compare (fst x) (fst y)) (oldBestL:cs)
+       bestModelL `deepseq` yield $
+         map 
+         (\m-> TS
+            { tsModel      = m
+            , tsGeneration = 1 --not sure this is used anyway
+            , tsEta        = 0 --also dont think this matters
+            , tsBatchError = fst bestModelL
+            })
+         (snd$ bestModelL)
+       loop $ bestModelL
     
