@@ -53,7 +53,7 @@ geneticTrainL ::
        (ModelSet f g a b c f' g' a' b' c' -> IO Double) -- ^ run the model and get cost
        -> Int                            -- ^ generation size
        -> (Double,ModelSet f g a b c f' g' a' b' c')
-       -> Producer (ModelSet f g a b c f' g' a' b' c') IO ()      -- produces better and better models (hopefully)
+       -> Producer (TS f g a b c) IO ()      -- produces better and better models (hopefully)
 geneticTrainL f gs ts = loop ts 
    where
     loop oldBestL = do
@@ -61,6 +61,11 @@ geneticTrainL f gs ts = loop ts
        costs <- mapM (lift. f) newGen
        let cs = zip costs newGen
        let bestModelL = maximumBy (\x y -> compare (fst x) (fst y)) (oldBestL:cs)
-       bestModelL `deepseq` yield $ snd bestModelL
+       bestModelL `deepseq` yield TS
+            { tsModel      = fst $ snd bestModelL
+            , tsGeneration = 1 --not sure this is used anyway
+            , tsEta        = 0 --also dont think this matters
+            , tsBatchError = fst bestModelL
+            }
        loop $ bestModelL
     
