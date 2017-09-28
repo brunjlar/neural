@@ -59,8 +59,10 @@ geneticTrainL f gs ss ts = loop ts
    where
     loop oldBestL = do
        randomGen <- mapM (lift. (\ms-> (evalRandIO$ modelR$ fst ms) >>= (\x-> return (x,snd ms)))) (replicate (gs-ss) (snd oldBestL))
+       randomGen2 <- mapM (lift. (\ms-> (evalRandIO$ modelR$ snd ms) >>= (\x-> return (fst ms,x)))) (replicate (gs-ss) (snd oldBestL))
        improvedGen <- mapM (lift. (\ms-> (evalRandIO$ modelG$ fst ms) >>= (\x-> return (x,snd ms)))) (replicate (ss) (snd oldBestL))
-       let newGen = randomGen++improvedGen
+       improvedGen2 <- mapM (lift. (\ms-> (evalRandIO$ modelG$ snd ms) >>= (\x-> return (fst ms, x)))) (replicate (ss) (snd oldBestL))
+       let newGen = randomGen++improvedGen++randomGen2++improvedGen2
        costs <- mapM (lift. f) newGen
        let cs = zip costs newGen
        let bestModelL = maximumBy (\x y -> compare (fst x) (fst y)) (oldBestL:cs)
