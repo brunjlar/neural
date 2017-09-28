@@ -52,12 +52,15 @@ type ModelSet f g a b c f' g' a' b' c' = ((Model f g a b c), (Model f' g' a' b' 
 geneticTrainL ::
        (ModelSet f g a b c f' g' a' b' c' -> IO Double) -- ^ run the model and get cost
        -> Int                            -- ^ generation size
+       -> Int
        -> (Double,ModelSet f g a b c f' g' a' b' c')
        -> Producer (TS f g a b c) IO ()      -- produces better and better models (hopefully)
-geneticTrainL f gs ts = loop ts 
+geneticTrainL f gs ss ts = loop ts 
    where
     loop oldBestL = do
-       newGen <- mapM (lift. (\ms-> (evalRandIO$ modelR$ fst ms) >>= (\x-> return (x,snd ms)))) (replicate gs (snd oldBestL))
+       randomGen <- mapM (lift. (\ms-> (evalRandIO$ modelR$ fst ms) >>= (\x-> return (x,snd ms)))) (replicate (gs-ss) (snd oldBestL))
+       improvedGen <- mapM (lift. (\ms-> (evalRandIO$ modelG$ fst ms) >>= (\x-> return (x,snd ms)))) (replicate (ss) (snd oldBestL))
+       let newGen = randomGen++improvedGen
        costs <- mapM (lift. f) newGen
        let cs = zip costs newGen
        let bestModelL = maximumBy (\x y -> compare (fst x) (fst y)) (oldBestL:cs)
