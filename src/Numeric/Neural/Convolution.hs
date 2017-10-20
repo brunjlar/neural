@@ -21,11 +21,14 @@ module Numeric.Neural.Convolution
     , cover
     , cover'
     , convolution
+    , maxPool
     ) where
 
 import Control.Category
 import Data.FixedSize
+import Data.Foldable          (toList)
 import Data.Functor.Compose   (Compose(..))
+import Data.Maybe             (fromJust)
 import Data.Proxy
 import Data.Utils
 import GHC.TypeLits
@@ -99,10 +102,30 @@ convolution :: forall s m n d m' n' d'.
 convolution ps stride l = cArr (Diff $ toVolume . unCompose) .
                           cConvolve l .
                           cArr (Diff $ Compose . cover' ps stride)
+  where _ = natVal (Proxy :: Proxy d)
 
+
+unCompose :: Compose f g a -> f (g a)
+unCompose (Compose x) = x
+
+-- | Applies 2D 'maxPool' over a 'Volume'.
+--
+maxPool :: forall s m n d m' n'.
+               (KnownNat s, KnownNat m, KnownNat n, KnownNat d, KnownNat m', KnownNat n')
+               => Proxy s              -- ^ a proxy to the region size
+               -> Int                  -- ^ the stride
+               -> Component (Volume m n d) (Volume m' n' d)
+-- maxPool ps stride = cArr (Diff $ toVolume . unCompose) .
+maxPool ps stride =
+  cArr (Diff $ toVolume . unCompose) .
+    cArr (Diff $ Compose . fmap (maxReduce (fromIntegral ((natVal (Proxy :: Proxy s)) ^ 2))) . unCompose) .
+  cArr (Diff $ Compose . cover' ps stride)
   where
+    maxReduce ::
+         (Foldable f, Applicative g, Traversable g, Ord a) => Int -> f a -> g a
+    maxReduce step = fromJust . fromList . maxReduce' step . toList
+    maxReduce' _ [] = []
+    maxReduce' step xs =
+      let (ys, yss) = splitAt step xs
+      in maximum ys : maxReduce' step yss
 
-    unCompose :: Compose f g a -> f (g a)
-    unCompose (Compose x) = x
-
-    _ = natVal (Proxy :: Proxy d)
