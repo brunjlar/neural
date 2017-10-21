@@ -41,7 +41,6 @@ module Numeric.Neural.Model
     , cFirst
     , cLeft
     , cConvolve
-    -- , cMax
     , Model(..)
     , _component
     , model
@@ -57,7 +56,6 @@ import Control.Arrow
 import Control.Category
 import Control.Monad.Par            (runPar)
 import Control.Monad.Par.Combinator (parMapReduceRange, InclusiveRange(..))
--- import Data.Foldable                (maximum)
 import Data.Functor.Compose         (Compose(..))
 import Data.Functor.Product         (Product(..))
 import Data.Functor.Sum             (Sum(..))
@@ -189,22 +187,6 @@ cConvolve (Component ws c i) = Component
     , compute = ParamFun $ \(Compose xss) ws' -> Compose $ flip (runPF c) ws' <$> xss
     , initR   = i
     }
-
--- | The analogue of 'max' for 'Component's.
---
--- cMax :: (Functor h, Foldable f) => Component (Compose h f) (Compose h g)
--- cMax :: (Functor h, Foldable f) => Component (Compose h f) h
--- cMax = Component
---     { weights = Empty
---     , compute = ParamFun $ \ (Compose xss) _ -> maximum <$> xss
---     , initR   = return Empty
---     }
--- newtype ParamFun s t a b = ParamFun { runPF :: a -> t s -> b }
--- data Component f g = forall t. (Traversable t, Applicative t, NFData (t Double)) => Component
---     { weights :: t Double                                         -- ^ the specific parameter values
---     , compute :: forall s. Analytic s => ParamFun s t (f s) (g s) -- ^ the encapsulated parameterized function
---     , initR   :: forall m. MonadRandom m => m (t Double)          -- ^ randomly sets the parameters
---     }
 
 instance NFData (Component f g) where
 

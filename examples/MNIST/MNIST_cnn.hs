@@ -12,7 +12,7 @@ import qualified Data.Array       as A
 import           Data.MyPrelude
 import           Data.Proxy       as DP
 import           Data.Utils
--- import           GHC.TypeLits     as TL
+import qualified Data.Vector.Storable as VS
 import           Numeric.Neural
 import           Pipes.GZip       (decompress)
 import qualified Pipes.Prelude    as P
@@ -36,7 +36,10 @@ main = flip evalRandT (mkStdGen 999999) $ do
 
     report ts = liftIO $ do
         let g = tsGeneration ts
-        when (g `mod` 5 == 0) $ printf "   %7d       %8.6f   %10.8f\n" g (tsEta ts) (tsBatchError ts)
+        when (g `mod` 5 == 0) $ do
+          printf "   %7d       %8.6f   %10.8f\n" g (tsEta ts) (tsBatchError ts)
+          case tsModel ts ^. _component of
+            Component{..} -> saveKernel g $ map realToFrac $ take 25 $ reverse $ toList weights
 
     check ts = do
         let g = tsGeneration ts
@@ -44,12 +47,16 @@ main = flip evalRandT (mkStdGen 999999) $ do
             then do
                 a <- liftIO $ accuracy $ tsModel ts
                 liftIO $ printf "\naccuracy %f\n\n" a
-                {- This doesn't work, due to the existentially quantified type of *weights*.
-                case (tsModel ts) ^. _component of
-                  Component{..} ->
-                    liftIO $ putStrLn $ "weights: " ++ show weights -}
                 return $ if a > 0.9 then Just (a, g) else Nothing
             else return Nothing
+
+    saveKernel :: Int -> [Float] -> IO ()
+    saveKernel g xs =
+      let img      = ImageYF $ Image 5 5 $ VS.fromList $ map ((/ xs_range) . flip (-) xs_min . realToFrac) xs
+          xs_min   = minimum xs
+          xs_range = maximum xs - minimum xs
+          filePath = "out" </> "kernel_" ++ show g <.> "png"
+       in savePngImage filePath img
 
 accuracy :: MNISTModel -> IO Double
 accuracy m = runSafeT $ fromJust <$> classifierAccuracyP m testSamples

@@ -115,14 +115,12 @@ maxPool :: forall s m n d m' n'.
                => Proxy s              -- ^ a proxy to the region size
                -> Int                  -- ^ the stride
                -> Component (Volume m n d) (Volume m' n' d)
--- maxPool ps stride = cArr (Diff $ toVolume . unCompose) .
 maxPool ps stride =
   cArr (Diff $ toVolume . unCompose) .
-    cArr (Diff $ Compose . fmap (maxReduce (fromIntegral ((natVal (Proxy :: Proxy s)) ^ 2))) . unCompose) .
+  cArr (Diff $ Compose . fmap (maxReduce (fromIntegral ((natVal (Proxy :: Proxy s)) ^ 2))) . unCompose) .
   cArr (Diff $ Compose . cover' ps stride)
   where
-    maxReduce ::
-         (Foldable f, Applicative g, Traversable g, Ord a) => Int -> f a -> g a
+    maxReduce :: (Foldable f, Applicative g, Traversable g, Ord a) => Int -> f a -> g a
     maxReduce step = fromJust . fromList . maxReduce' step . toList
     maxReduce' _ [] = []
     maxReduce' step xs =
