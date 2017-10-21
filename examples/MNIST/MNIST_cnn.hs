@@ -22,10 +22,12 @@ main :: IO ()
 main = flip evalRandT (mkStdGen 999999) $ do
     xs     <- getSamples [0 .. 999]
     m      <- modelR (whiten mnistModel $ fst <$> xs)
+    case m ^. _component of
+      Component{..} -> liftIO $ printf "Length(weights): %d\n" (length weights)
     liftIO $ printf "\ngeneration  learning rate  batch error\n\n"
     (a, g) <- runEffect $
             cachingBatchP getSamples 60000 20 2000 100
-        >-> descentP m 1 (\g -> 0.4 * 100 / (100 + fromIntegral g))
+        >-> descentP m 1 (\g -> 0.1 * 100 / (100 + fromIntegral g))
         >-> reportTSP 1 report
         >-> consumeTSP check
     liftIO $ printf "\nreached accuracy of %f after %d generations\n" a g
@@ -39,7 +41,8 @@ main = flip evalRandT (mkStdGen 999999) $ do
         when (g `mod` 5 == 0) $ do
           printf "   %7d       %8.6f   %10.8f\n" g (tsEta ts) (tsBatchError ts)
           case tsModel ts ^. _component of
-            Component{..} -> saveKernel g $ map realToFrac $ take 25 $ reverse $ toList weights
+            Component{..} -> saveKernel g $ map realToFrac $ take 56 $ reverse $ toList weights
+            -- Component{..} -> saveKernel g $ map realToFrac $ take 56 $ drop 56 $ toList weights
 
     check ts = do
         let g = tsGeneration ts
@@ -52,7 +55,7 @@ main = flip evalRandT (mkStdGen 999999) $ do
 
     saveKernel :: Int -> [Float] -> IO ()
     saveKernel g xs =
-      let img      = ImageYF $ Image 5 5 $ VS.fromList $ map ((/ xs_range) . flip (-) xs_min . realToFrac) xs
+      let img      = ImageYF $ Image 8 7 $ VS.fromList $ map ((/ xs_range) . flip (-) xs_min . realToFrac) xs
           xs_min   = minimum xs
           xs_range = maximum xs - minimum xs
           filePath = "out" </> "kernel_" ++ show g <.> "png"
@@ -100,12 +103,17 @@ type MNISTModel = Classifier (Matrix 28 28) 10 Img Digit
 mnistModel :: MNISTModel
 mnistModel = mkStdClassifier c i where
 
+    -- c = reLULayer
+    --   . cArr (Diff toVector)
+    --   . (maxPool (Proxy :: DP.Proxy 4) 4               :: Component (Volume  4  4 32) (Volume  1  1 32))
+    --   . (convolution (Proxy :: DP.Proxy 3) 1 reLULayer :: Component (Volume  6  6 16) (Volume  4  4 32))
+    --   . (maxPool (Proxy :: DP.Proxy 4) 4               :: Component (Volume 24 24 16) (Volume  6  6 16))
+    --   . (convolution (Proxy :: DP.Proxy 5) 1 reLULayer :: Component (Volume 28 28  1) (Volume 24 24 16))
+    --   . cArr (Diff fromMatrix)
+
     c = reLULayer
       . cArr (Diff toVector)
-      . (maxPool (Proxy :: DP.Proxy 4) 4               :: Component (Volume  4  4 32) (Volume  1  1 32))
-      . (convolution (Proxy :: DP.Proxy 3) 1 reLULayer :: Component (Volume  6  6 16) (Volume  4  4 32))
-      . (maxPool (Proxy :: DP.Proxy 4) 4               :: Component (Volume 24 24 16) (Volume  6  6 16))
-      . (convolution (Proxy :: DP.Proxy 5) 1 reLULayer :: Component (Volume 28 28  1) (Volume 24 24 16))
+      . (convolution (Proxy :: DP.Proxy 7) 3 reLULayer :: Component (Volume 28 28  1) (Volume 8 8 4))
       . cArr (Diff fromMatrix)
 
     i img = let m = generate $ \(x, y) -> fromIntegral (pixelAt img x y) in force m
