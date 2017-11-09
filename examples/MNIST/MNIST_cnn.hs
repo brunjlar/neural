@@ -27,7 +27,8 @@ main = flip evalRandT (mkStdGen 999999) $ do
     liftIO $ printf "\ngeneration  learning rate  batch error\n\n"
     (a, g) <- runEffect $
             cachingBatchP getSamples 60000 20 2000 100
-        >-> descentP m 1 (\g -> 0.1 * 100 / (100 + fromIntegral g))
+        -- >-> descentP m 1 (\g -> 0.05 * 100 / (100 + fromIntegral g))
+        >-> descentP m 1 (\g -> 0.05)
         >-> reportTSP 1 report
         >-> consumeTSP check
     liftIO $ printf "\nreached accuracy of %f after %d generations\n" a g
@@ -103,18 +104,18 @@ type MNISTModel = Classifier (Matrix 28 28) 10 Img Digit
 mnistModel :: MNISTModel
 mnistModel = mkStdClassifier c i where
 
-    -- c = reLULayer
-    --   . cArr (Diff toVector)
-    --   . (maxPool (Proxy :: DP.Proxy 4) 4               :: Component (Volume  4  4 32) (Volume  1  1 32))
-    --   . (convolution (Proxy :: DP.Proxy 3) 1 reLULayer :: Component (Volume  6  6 16) (Volume  4  4 32))
-    --   . (maxPool (Proxy :: DP.Proxy 4) 4               :: Component (Volume 24 24 16) (Volume  6  6 16))
-    --   . (convolution (Proxy :: DP.Proxy 5) 1 reLULayer :: Component (Volume 28 28  1) (Volume 24 24 16))
-    --   . cArr (Diff fromMatrix)
-
     c = reLULayer
       . cArr (Diff toVector)
-      . (convolution (Proxy :: DP.Proxy 7) 3 reLULayer :: Component (Volume 28 28  1) (Volume 8 8 4))
+      . (maxPool (Proxy :: DP.Proxy 4) 4               :: Component (Volume  4  4 32) (Volume  1  1 32))
+      . (convolution (Proxy :: DP.Proxy 3) 1 reLULayer :: Component (Volume  6  6 16) (Volume  4  4 32))
+      . (maxPool (Proxy :: DP.Proxy 4) 4               :: Component (Volume 24 24 16) (Volume  6  6 16))
+      . (convolution (Proxy :: DP.Proxy 5) 1 reLULayer :: Component (Volume 28 28  1) (Volume 24 24 16))
       . cArr (Diff fromMatrix)
+
+    -- c = reLULayer
+    --   . cArr (Diff toVector)
+    --   . (convolution (Proxy :: DP.Proxy 7) 3 reLULayer :: Component (Volume 28 28  1) (Volume 8 8 4))
+    --   . cArr (Diff fromMatrix)
 
     i img = let m = generate $ \(x, y) -> fromIntegral (pixelAt img x y) in force m
 
