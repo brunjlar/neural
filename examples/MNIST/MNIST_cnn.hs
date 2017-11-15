@@ -26,7 +26,7 @@ main = flip evalRandT (mkStdGen 999999) $ do
       Component{..} -> liftIO $ printf "Length(weights): %d\n" (length weights)
     liftIO $ printf "\ngeneration  learning rate  batch error\n\n"
     (a, g) <- runEffect $
-            cachingBatchP getSamples 60000 20 2000 100
+            cachingBatchP getSamples 60000 32 3200 100
         -- >-> descentP m 1 (\g -> 0.05 * 100 / (100 + fromIntegral g))
         >-> descentP m 1 (\g -> 0.05)
         >-> reportTSP 1 report
@@ -104,18 +104,16 @@ type MNISTModel = Classifier (Matrix 28 28) 10 Img Digit
 mnistModel :: MNISTModel
 mnistModel = mkStdClassifier c i where
 
-    c = reLULayer
+    c = softmaxLayer
+      . (linearLayer                                    :: Layer  500  10)
+      -- . reLULayer                                      :: Layer 2450 500
+      . reLULayer
       . cArr (Diff toVector)
-      . (maxPool (Proxy :: DP.Proxy 4) 4               :: Component (Volume  4  4 32) (Volume  1  1 32))
-      . (convolution (Proxy :: DP.Proxy 3) 1 reLULayer :: Component (Volume  6  6 16) (Volume  4  4 32))
-      . (maxPool (Proxy :: DP.Proxy 4) 4               :: Component (Volume 24 24 16) (Volume  6  6 16))
-      . (convolution (Proxy :: DP.Proxy 5) 1 reLULayer :: Component (Volume 28 28  1) (Volume 24 24 16))
+      . (maxPool (Proxy :: DP.Proxy 2) 2               :: Component (Volume 14 14 50) (Volume  7  7 50))
+      . (convolution (Proxy :: DP.Proxy 5) 1 reLULayer :: Component (Volume 14 14 20) (Volume 14 14 50))
+      . (maxPool (Proxy :: DP.Proxy 2) 2               :: Component (Volume 28 28 20) (Volume 14 14 20))
+      . (convolution (Proxy :: DP.Proxy 5) 1 reLULayer :: Component (Volume 28 28  1) (Volume 28 28 20))
       . cArr (Diff fromMatrix)
-
-    -- c = reLULayer
-    --   . cArr (Diff toVector)
-    --   . (convolution (Proxy :: DP.Proxy 7) 3 reLULayer :: Component (Volume 28 28  1) (Volume 8 8 4))
-    --   . cArr (Diff fromMatrix)
 
     i img = let m = generate $ \(x, y) -> fromIntegral (pixelAt img x y) in force m
 
