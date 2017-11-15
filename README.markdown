@@ -28,7 +28,7 @@ In order to provide a powerful and flexible API, models are constructed using *c
 They can therefore easily be combined and transformed.
 
 Once a model has been constructed, it can be hooked up into a customized training algorithm using [pipes](https://hackage.haskell.org/package/pipes),
-so that various aspects of the algorithm (loading data, choosing random samples, reporting intermediate results, stop criterium etc.) can be defined in a modular,
+so that various aspects of the algorithm (loading data, choosing random samples, reporting intermediate results, stop criterion etc.) can be defined in a modular,
 decoupled way.
 
 Even though neural networks are the primary motivation for this project, any other kind of model can be
