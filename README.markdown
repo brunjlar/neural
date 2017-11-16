@@ -12,7 +12,7 @@ There are already a couple of neural network libraries out there on Hackage, but
 they either
 
 - are wrappers for an engine written in another language or
-- offer a limitted choice of network architectures, training algorithms or error functions
+- offer a limited choice of network architectures, training algorithms or error functions
   or are not easily extensible.
 
 The goal of this library is to have an implementation in native Haskell (reasonably efficient)
