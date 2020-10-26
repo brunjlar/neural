@@ -12,7 +12,7 @@ There are already a couple of neural network libraries out there on Hackage, but
 they either
 
 - are wrappers for an engine written in another language or
-- offer a limitted choice of network architectures, training algorithms or error functions
+- offer a limited choice of network architectures, training algorithms or error functions
   or are not easily extensible.
 
 The goal of this library is to have an implementation in native Haskell (reasonably efficient)
@@ -28,7 +28,7 @@ In order to provide a powerful and flexible API, models are constructed using *c
 They can therefore easily be combined and transformed.
 
 Once a model has been constructed, it can be hooked up into a customized training algorithm using [pipes](https://hackage.haskell.org/package/pipes),
-so that various aspects of the algorithm (loading data, choosing random samples, reporting intermediate results, stop criterium etc.) can be defined in a modular,
+so that various aspects of the algorithm (loading data, choosing random samples, reporting intermediate results, stop criterion etc.) can be defined in a modular,
 decoupled way.
 
 Even though neural networks are the primary motivation for this project, any other kind of model can be
