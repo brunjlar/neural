@@ -48,7 +48,7 @@ data TS f g a b c = TS
 -- | A 'Pipe' for training a model: It consumes mini-batches of samples from upstream and pushes
 --   the updated training state downstream.
 --
-descentP :: (Foldable h, Monad m) =>
+descentP :: (Show a, Foldable h, Monad m) =>
             Model f g a b c                  -- ^ initial model
             -> Int                           -- ^ first generation
             -> (Int -> Double)               -- ^ computes the learning rate from the generation

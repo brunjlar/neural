@@ -1,5 +1,5 @@
 name:                neural
-version:             0.3.0.1
+version:             0.3.2
 synopsis:            Neural Networks in native Haskell
 description:
   The goal of `neural` is to provide a modular and flexible neural network library written in native Haskell.
@@ -57,6 +57,8 @@ library
                      , Numeric.Neural.Model
                      , Numeric.Neural.Normalization
                      , Numeric.Neural.Pipes
+                     , Numeric.Neural.Reinforcement
+                     , Numeric.Neural.Genetic
                      , Data.FixedSize
                      , Data.FixedSize.Class
                      , Data.FixedSize.Matrix
@@ -170,18 +172,6 @@ executable sqrt
   build-depends:       base >= 4.7 && < 5
                      , MonadRandom
                      , neural
-  ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N -fexcess-precision -optc-O3 -optc-ffast-math
-  default-language:    Haskell2010
-
-executable MNIST
-  hs-source-dirs:      examples/MNIST
-  main-is:             MNIST.hs
-  build-depends:       base >= 4.7 && < 5
-                     , array
-                     , JuicyPixels
-                     , neural
-                     , pipes
-                     , pipes-zlib
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N -fexcess-precision -optc-O3 -optc-ffast-math
   default-language:    Haskell2010
 

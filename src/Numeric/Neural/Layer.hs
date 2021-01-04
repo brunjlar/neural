@@ -43,7 +43,7 @@ import Prelude                 hiding (id, (.))
 --
 type Layer i o = Component (Vector i) (Vector o)
 
-linearLayer' :: forall i o s. Analytic s => ParamFun s (Matrix o (i + 1)) (Vector i s) (Vector o s)
+linearLayer' :: forall i o s. Analytic s => ParamFun s (Matrix o (1 + i)) (Vector i s) (Vector o s)
 linearLayer' = ParamFun $ \xs ws -> ws <%%> cons 1 xs
 
 -- | Creates a /linear/ @'Layer'@, i.e. a layer that multiplies the input with a weight @'Matrix'@ and adds a bias to get the output.
@@ -51,7 +51,7 @@ linearLayer' = ParamFun $ \xs ws -> ws <%%> cons 1 xs
 --   Random initialization follows the recommendation from chapter 3 of the online book
 --   <http://neuralnetworksanddeeplearning.com/ Neural Networks and Deep Learning> by Michael Nielsen.
 linearLayer :: forall i o. (KnownNat i, KnownNat o) => Layer i o
-linearLayer = withNatOp (%+) p (Proxy :: Proxy 1) Component
+linearLayer = withNatOp (%+) (Proxy :: Proxy 1) p Component
     { weights = pure 0
     , compute = linearLayer'
     , initR   = sequenceA $ generate r
